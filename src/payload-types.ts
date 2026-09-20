@@ -376,6 +376,7 @@ export interface Media {
    * Purpose statement shown next to the form (Section 3.1.6 c).
    */
   gatePurpose?: string | null;
+  _objectKey?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -2614,6 +2615,7 @@ export interface MediaSelect<T extends boolean = true> {
   credit?: T;
   access?: T;
   gatePurpose?: T;
+  _objectKey?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
