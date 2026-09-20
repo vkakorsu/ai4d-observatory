@@ -1,0 +1,29 @@
+# Reverse proxy for docker-compose.yml. Caddy obtains and renews TLS certificates automatically
+# for SITE_DOMAIN. For a local trial set SITE_DOMAIN=localhost and Caddy issues a self-signed cert.
+
+{
+	email {$ACME_EMAIL}
+}
+
+{$SITE_DOMAIN} {
+	encode zstd gzip
+
+	# Optional self-hosted analytics (docker compose --profile analytics).
+	handle_path /stats/* {
+		reverse_proxy umami:3000
+	}
+
+	handle {
+		reverse_proxy app:3000
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}

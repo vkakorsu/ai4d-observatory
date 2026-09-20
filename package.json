@@ -1,0 +1,75 @@
+{
+  "name": "ai4d-observatory",
+  "version": "0.1.0",
+  "description": "Asia AI4D Observatory website. Prototype and seed of the production platform proposed to LIRNEasia.",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20.9.0",
+    "pnpm": ">=9"
+  },
+  "scripts": {
+    "dev": "cross-env NODE_OPTIONS=--no-deprecation next dev",
+    "build": "cross-env NODE_OPTIONS=\"--no-deprecation --max-old-space-size=8000\" next build",
+    "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
+    "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
+    "generate:types": "cross-env NODE_OPTIONS=--no-deprecation payload generate:types",
+    "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",
+    "seed": "cross-env NODE_OPTIONS=\"--no-deprecation --import=tsx/esm\" tsx src/seed/run.ts",
+    "export": "cross-env NODE_OPTIONS=\"--no-deprecation --import=tsx/esm\" tsx src/seed/export.ts",
+    "retention": "cross-env NODE_OPTIONS=\"--no-deprecation --import=tsx/esm\" tsx src/jobs/run-retention.ts",
+    "a11y": "node scripts/a11y.mjs",
+    "test": "cross-env NODE_OPTIONS=--no-deprecation vitest run",
+    "test:watch": "cross-env NODE_OPTIONS=--no-deprecation vitest",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fontsource-variable/ibm-plex-sans": "5.3.0",
+    "@fontsource-variable/newsreader": "5.3.0",
+    "@fontsource/ibm-plex-mono": "5.3.0",
+    "@payloadcms/db-postgres": "3.90.1",
+    "@payloadcms/db-sqlite": "3.90.1",
+    "@payloadcms/next": "3.90.1",
+    "@payloadcms/plugin-import-export": "3.90.1",
+    "@payloadcms/plugin-search": "3.90.1",
+    "@payloadcms/richtext-lexical": "3.90.1",
+    "@payloadcms/storage-vercel-blob": "3.90.1",
+    "@payloadcms/ui": "3.90.1",
+    "cross-env": "10.1.0",
+    "d3-geo": "3.1.1",
+    "dotenv": "16.4.7",
+    "graphql": "^16.8.1",
+    "next": "16.3.5",
+    "payload": "3.90.1",
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "sharp": "0.35.4",
+    "topojson-client": "3.1.0",
+    "world-atlas": "2.0.2"
+  },
+  "devDependencies": {
+    "@types/d3-geo": "^3.1.0",
+    "@types/geojson": "^7946.0.16",
+    "@types/node": "24.12.3",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@types/topojson-client": "^3.1.5",
+    "@types/topojson-specification": "^1.0.5",
+    "axe-core": "^4.13.0",
+    "jsdom": "^26.1.0",
+    "tsx": "4.22.4",
+    "typescript": "5.9.3",
+    "vitest": "5.0.1"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "sharp",
+      "esbuild",
+      "unrs-resolver",
+      "@libsql/client",
+      "libsql"
+    ]
+  }
+}

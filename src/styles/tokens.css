@@ -1,0 +1,78 @@
+/* Design tokens. See DESIGN.md for the reasoning behind each value. */
+:root {
+  /* Colour */
+  --ink: #1a1f1c;
+  --ink-72: #3d423f;
+  --ink-56: #5b605d;
+  --ink-32: #8a8e8b;
+  --ink-16: #c9ccc9;
+  --ink-8: #e4e6e3;
+  --paper: #f7f5f0;
+  --paper-deep: #efece4;
+  --surface: #ffffff;
+  --accent: #c8371f;
+  --accent-deep: #a02b17;
+  --accent-tint: #f8e7e2;
+  --moss: #3f6b4f;
+  --moss-tint: #e6efe9;
+  --ochre: #c99a2e;
+  --ochre-tint: #f7efd9;
+  --ochre-deep: #7a5a12;
+  --focus: #1a1f1c;
+
+  /* Data ramp (teal-green), six steps */
+  --data-1: #e6efe9;
+  --data-2: #c3d9cc;
+  --data-3: #95bda9;
+  --data-4: #659c84;
+  --data-5: #3f7a63;
+  --data-6: #25553f;
+  --data-none: #f1efe9;
+
+  /* Type */
+  --font-display: 'Newsreader Variable', Georgia, 'Times New Roman', serif;
+  --font-text: 'IBM Plex Sans Variable', 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'IBM Plex Mono', Consolas, 'SFMono-Regular', Menlo, monospace;
+
+  --step--1: 0.8125rem; /* 13 */
+  --step-0: 0.875rem; /* 14 */
+  --step-1: 1rem; /* 17 at 17px root */
+  --step-2: 1.1765rem; /* 20 */
+  --step-3: 1.4118rem; /* 24 */
+  --step-4: 1.7059rem; /* 29 */
+  --step-5: 2.0588rem; /* 35 */
+  --step-6: 2.4706rem; /* 42 */
+  --step-7: 3.2941rem; /* 56 */
+
+  --leading-tight: 1.08;
+  --leading-snug: 1.2;
+  --leading-body: 1.55;
+
+  /* Space */
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1rem;
+  --s-5: 1.5rem;
+  --s-6: 2rem;
+  --s-7: 3rem;
+  --s-8: 4rem;
+  --s-9: 6rem;
+
+  /* Layout */
+  --measure: 44rem;
+  --container: 76rem;
+  --gutter: clamp(1rem, 4vw, 2.5rem);
+  --radius: 2px;
+  --rule: 1px solid var(--ink-16);
+  --rule-strong: 1px solid var(--ink);
+
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --dur: 150ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur: 0ms;
+  }
+}

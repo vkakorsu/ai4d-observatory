@@ -1,0 +1,166 @@
+# Asia AI4D Observatory. Production compose file (PROTOTYPE_SPEC section 9, DEPLOY.md section 5).
+#
+# Services
+#   app       Next.js + Payload, built from ./Dockerfile
+#   db        PostgreSQL 16 with a persistent volume
+#   caddy     Reverse proxy with automatic TLS. Set SITE_DOMAIN to the public host name.
+#   migrate   One-off tool. `docker compose run --rm migrate` applies database migrations.
+#   seed      One-off tool. `docker compose run --rm seed` loads the labelled sample content.
+#   export    One-off tool. `docker compose run --rm export` writes JSON and CSV to ./export.
+#   umami     Privacy-friendly analytics, optional. `docker compose --profile analytics up -d`.
+#
+# First run
+#   cp .env.example .env            then set PAYLOAD_SECRET, POSTGRES_PASSWORD, SITE_DOMAIN, ACME_EMAIL
+#   docker compose up -d --build db
+#   docker compose run --rm migrate
+#   docker compose run --rm seed    (optional)
+#   docker compose up -d --build
+#
+# Everything the app needs is read from .env. See DEPLOY.md for the full variable list.
+
+name: ai4d-observatory
+
+x-app-env: &app-env
+  NODE_ENV: production
+  DATABASE_URI: postgres://${POSTGRES_USER:-ai4d}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:-ai4d}
+  PAYLOAD_SECRET: ${PAYLOAD_SECRET:?set PAYLOAD_SECRET in .env}
+  NEXT_PUBLIC_SITE_URL: https://${SITE_DOMAIN:-localhost}
+  MEDIA_STORAGE: ${MEDIA_STORAGE:-local}
+  BLOB_READ_WRITE_TOKEN: ${BLOB_READ_WRITE_TOKEN:-}
+  NEWSLETTER_PROVIDER: ${NEWSLETTER_PROVIDER:-local}
+  BREVO_API_KEY: ${BREVO_API_KEY:-}
+  BREVO_LIST_ID: ${BREVO_LIST_ID:-}
+  MAILCHIMP_API_KEY: ${MAILCHIMP_API_KEY:-}
+  MAILCHIMP_SERVER_PREFIX: ${MAILCHIMP_SERVER_PREFIX:-}
+  MAILCHIMP_LIST_ID: ${MAILCHIMP_LIST_ID:-}
+  NEXT_PUBLIC_ANALYTICS_PROVIDER: ${NEXT_PUBLIC_ANALYTICS_PROVIDER:-none}
+  NEXT_PUBLIC_UMAMI_SCRIPT_URL: ${NEXT_PUBLIC_UMAMI_SCRIPT_URL:-}
+  NEXT_PUBLIC_UMAMI_WEBSITE_ID: ${NEXT_PUBLIC_UMAMI_WEBSITE_ID:-}
+  NEXT_PUBLIC_GA4_ID: ${NEXT_PUBLIC_GA4_ID:-}
+  GATE_TOKEN_TTL_MINUTES: ${GATE_TOKEN_TTL_MINUTES:-30}
+  SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@example.org}
+  SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
+  SEED_EDITOR_EMAIL: ${SEED_EDITOR_EMAIL:-editor@example.org}
+  SEED_EDITOR_PASSWORD: ${SEED_EDITOR_PASSWORD:-}
+
+x-build-args: &build-args
+  NEXT_PUBLIC_SITE_URL: https://${SITE_DOMAIN:-localhost}
+  NEXT_PUBLIC_ANALYTICS_PROVIDER: ${NEXT_PUBLIC_ANALYTICS_PROVIDER:-none}
+  NEXT_PUBLIC_UMAMI_SCRIPT_URL: ${NEXT_PUBLIC_UMAMI_SCRIPT_URL:-}
+  NEXT_PUBLIC_UMAMI_WEBSITE_ID: ${NEXT_PUBLIC_UMAMI_WEBSITE_ID:-}
+  NEXT_PUBLIC_GA4_ID: ${NEXT_PUBLIC_GA4_ID:-}
+  NEXT_PUBLIC_NOINDEX: ${NEXT_PUBLIC_NOINDEX:-false}
+
+services:
+  app:
+    build:
+      context: .
+      args: *build-args
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment: *app-env
+    volumes:
+      # Uploaded files when MEDIA_STORAGE=local. Back this up together with the database.
+      - media:/app/media
+    expose:
+      - '3000'
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ai4d}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-ai4d}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./deploy/postgres-init.sql:/docker-entrypoint-initdb.d/10-umami.sql:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-ai4d} -d ${POSTGRES_DB:-ai4d}']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - '80:80'
+      - '443:443'
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:-localhost}
+      ACME_EMAIL: ${ACME_EMAIL:-}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+  # One-off tools built from the `builder` stage, which has the full toolchain (tsx, payload CLI).
+  migrate:
+    build:
+      context: .
+      target: builder
+      args: *build-args
+    profiles: ['tools']
+    depends_on:
+      db:
+        condition: service_healthy
+    environment: *app-env
+    command: pnpm payload migrate
+
+  seed:
+    build:
+      context: .
+      target: builder
+      args: *build-args
+    profiles: ['tools']
+    depends_on:
+      db:
+        condition: service_healthy
+    environment: *app-env
+    volumes:
+      - media:/app/media
+    command: pnpm seed
+
+  export:
+    build:
+      context: .
+      target: builder
+      args: *build-args
+    profiles: ['tools']
+    depends_on:
+      db:
+        condition: service_healthy
+    environment: *app-env
+    volumes:
+      - ./export:/app/export
+    command: pnpm export
+
+  # Optional self-hosted analytics. `docker compose --profile analytics up -d`.
+  # Served at https://<SITE_DOMAIN>/stats/ by Caddy. Create the website in the Umami dashboard, then set
+  # NEXT_PUBLIC_ANALYTICS_PROVIDER=umami, NEXT_PUBLIC_UMAMI_SCRIPT_URL=https://<SITE_DOMAIN>/stats/script.js
+  # and NEXT_PUBLIC_UMAMI_WEBSITE_ID in .env and rebuild the app (`docker compose up -d --build app`).
+  umami:
+    image: ghcr.io/umami-software/umami:postgresql-latest
+    profiles: ['analytics']
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-ai4d}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/${UMAMI_DB:-umami}
+      DATABASE_TYPE: postgresql
+      APP_SECRET: ${UMAMI_APP_SECRET:-${PAYLOAD_SECRET}}
+      TRACKER_SCRIPT_NAME: script
+    expose:
+      - '3000'
+
+volumes:
+  pgdata:
+  media:
+  caddy_data:
+  caddy_config:

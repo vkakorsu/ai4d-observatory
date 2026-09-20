@@ -1,0 +1,15 @@
+node_modules
+.next
+.git
+.env
+.env.*
+!.env.example
+data
+media
+export
+coverage
+*.tsbuildinfo
+README.md
+DEPLOY.md
+DESIGN.md
+docs
