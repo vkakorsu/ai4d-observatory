@@ -119,10 +119,9 @@ const seedUsers = async (payload: Payload) => {
 const seedTaxonomy = async (payload: Payload, collection: CollectionSlug, items: readonly SeedRecord[]) => {
   let n = 0
   for (const item of items) {
-    const name = String(item.name)
-    const slug = slugify(name)
-    const { name: _n, ...rest } = item
-    await upsertBySlug(payload, collection, slug, { name, ...rest })
+    const { name, ...rest } = item
+    const label = String(name)
+    await upsertBySlug(payload, collection, slugify(label), { name: label, ...rest })
     n++
   }
   log(`${collection}: ${n}`)

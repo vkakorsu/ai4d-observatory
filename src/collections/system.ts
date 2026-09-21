@@ -21,7 +21,7 @@ export const Users: CollectionConfig = {
   access: {
     read: isLoggedIn,
     create: isAdmin,
-    update: ({ req, id }) => {
+    update: ({ req }) => {
       const user = req.user as { role?: string; id?: string | number } | null
       if (!user) return false
       if (user.role === 'admin') return true

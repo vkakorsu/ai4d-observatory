@@ -70,7 +70,7 @@ DATABASE_URI=postgres://ai4d:<password>@localhost:5432/ai4d pnpm dev
 
 ## 3. Publishing to GitHub
 
-The repository is MIT-licensed and designed to be public (RFP 3.1.8, portability). Personal data never enters the repository: `.gitignore` excludes `.env`, `data/` (SQLite), `media/` (uploads) and `export/`.
+The repository is MIT-licensed and designed to be public (RFP 3.1.8, portability). Personal data never enters the repository: `.gitignore` excludes `.env`, `/data/` (SQLite), `/media/` (uploads) and `/export/`. `.vercelignore` and `.dockerignore` must use the same root-anchored patterns. An unanchored `data` rule also drops `src/app/(site)/data` and the live `/data` page 404s.
 
 ```bash
 cd ai4d-prototype
@@ -152,7 +152,7 @@ DATABASE_URI=postgres://ai4d:<password>@localhost:5432/ai4d pnpm payload migrate
 git add src/migrations && git commit -m "Initial migration"
 ```
 
-Apply migrations on each host with `pnpm payload migrate` (Vercel build command, Railway shell, or `docker compose run --rm migrate`). Whenever a collection or field changes, run `migrate:create <name>` again locally, commit the result, and deploy. `pnpm payload migrate:status` shows what is pending.
+Apply migrations on each host with `pnpm payload migrate` (locally against the host database, a Railway shell, or `docker compose run --rm migrate`). Do not put `payload migrate` in the Vercel build command: if the database was previously pushed in development, migrate asks an interactive question and the build hangs. Whenever a collection or field changes, run `migrate:create <name>` again locally, commit the result, and deploy. `pnpm payload migrate:status` shows what is pending.
 
 SQLite prototypes need none of this. Moving prototype content from SQLite to PostgreSQL is done with `pnpm export` on the old host and re-import through the REST API, or simply by re-running `pnpm seed` and re-entering the small amount of real content created during evaluation.
 

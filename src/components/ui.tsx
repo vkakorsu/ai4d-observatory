@@ -148,7 +148,7 @@ export function TaxChips({
   const rest = chips.length - shown.length
   if (!chips.length) return null
   return (
-    <div className="cluster" style={{ gap: 'var(--s-1)' }}>
+    <div className="chip-row">
       {shown.map((c) => (
         <Link key={c.key} href={c.href} className={c.cls}>
           {c.label}

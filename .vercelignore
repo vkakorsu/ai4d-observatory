@@ -1,7 +1,9 @@
 .env
 .env.*
 !.env.example
-data
-media
-export
+# Root-only local artifacts. An unanchored `data` also drops src/app/(site)/data
+# from the Vercel upload, so /data 404s and falls through to the CMS [slug] page.
+/data
+/media
+/export
 .vercel

@@ -148,7 +148,7 @@ ai4d-prototype/
 
 ## 7. Technology
 
-Next.js 16 (App Router, server components), Payload CMS 3 (embedded, Lexical rich text, search plugin, import/export plugin, versions, drafts and trash), TypeScript, SQLite via libSQL for development and the evaluation prototype, PostgreSQL adapter for production, d3-geo and Natural Earth boundaries (`world-atlas`) for server-rendered SVG maps, sharp for image sizes, Vitest for tests. No client-side data fetching on content pages. Licence: MIT.
+Next.js 15.4 (App Router, server components), Payload CMS 3 (embedded, Lexical rich text, search plugin, import/export plugin, versions, drafts and trash), TypeScript, SQLite via libSQL for development and the evaluation prototype, PostgreSQL adapter for production, d3-geo and Natural Earth boundaries (`world-atlas`) for server-rendered SVG maps, sharp for image sizes, Vitest for tests. No client-side data fetching on content pages. Licence: MIT.
 
 ## 8. Tests
 

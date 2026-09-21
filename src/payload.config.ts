@@ -3,8 +3,6 @@ import { fileURLToPath } from 'url'
 import sharp from 'sharp'
 import { buildConfig, type Plugin } from 'payload'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
-import { sqliteAdapter } from '@payloadcms/db-sqlite'
-import { postgresAdapter } from '@payloadcms/db-postgres'
 import { searchPlugin } from '@payloadcms/plugin-search'
 import { importExportPlugin } from '@payloadcms/plugin-import-export'
 import { vercelBlobStorage } from '@payloadcms/storage-vercel-blob'
@@ -32,6 +30,7 @@ import { formEndpoints } from './endpoints/forms'
 import { searchBeforeSync, searchCollections, searchPriorities } from './hooks/search'
 import { isEditor, isLoggedIn } from './access/roles'
 import { purgeExpiredRecordsTask } from './jobs/retention'
+import { createDatabaseAdapter } from './lib/database'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -42,11 +41,7 @@ const dirname = path.dirname(filename)
  * so the same code runs on a laptop, on the evaluation host and on the Client's server.
  */
 
-const databaseUri = process.env.DATABASE_URI || 'file:./data/ai4d.db'
-
-const db = databaseUri.startsWith('postgres')
-  ? postgresAdapter({ pool: { connectionString: databaseUri } })
-  : sqliteAdapter({ client: { url: databaseUri } })
+const db = await createDatabaseAdapter()
 
 const plugins: Plugin[] = [
   searchPlugin({
@@ -99,14 +94,19 @@ const plugins: Plugin[] = [
   }),
 ]
 
-if (process.env.MEDIA_STORAGE === 'vercel-blob') {
-  plugins.push(
-    vercelBlobStorage({
-      collections: { media: true },
-      token: process.env.BLOB_READ_WRITE_TOKEN || '',
-    }),
-  )
-}
+/**
+ * Always register the adapter so `payload generate:importmap` includes
+ * `VercelBlobClientUploadHandler`. Leaving it out locally produced a blank
+ * /admin on Vercel: getFromImportMap threw and RootPage rendered nothing.
+ * Without a token the plugin disables itself and media stays on disk.
+ */
+plugins.push(
+  vercelBlobStorage({
+    collections: { media: true },
+    enabled: process.env.MEDIA_STORAGE === 'vercel-blob',
+    token: process.env.BLOB_READ_WRITE_TOKEN || '',
+  }),
+)
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 

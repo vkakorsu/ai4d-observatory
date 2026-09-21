@@ -9,8 +9,10 @@ const dirname = path.dirname(__filename)
 /**
  * Content Security Policy (Section 3.1.6 b). Third-party origins are limited to the configured
  * analytics provider and the two video hosts the embed helper produces. Payload's admin UI and
- * Next.js need inline scripts and styles, so script-src allows them; frame-ancestors, object-src,
- * base-uri and form-action still close the common injection paths. HSTS is set by the reverse proxy.
+ * Next.js need inline scripts and styles, so script-src allows them. worker-src and child-src
+ * include blob: for the Lexical editor; connect-src allows Vercel Blob when media is stored there.
+ * frame-ancestors, object-src, base-uri and form-action still close the common injection paths.
+ * HSTS is set by the reverse proxy.
  */
 const analyticsOrigins = [
   process.env.NEXT_PUBLIC_UMAMI_SCRIPT_URL ? new URL(process.env.NEXT_PUBLIC_UMAMI_SCRIPT_URL).origin : '',
@@ -25,7 +27,9 @@ const contentSecurityPolicy = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  `connect-src 'self' ${analyticsOrigins}`.trim(),
+  `connect-src 'self' https://*.public.blob.vercel-storage.com https://blob.vercel-storage.com ${analyticsOrigins}`.trim(),
+  "worker-src 'self' blob:",
+  "child-src 'self' blob:",
   "media-src 'self' blob:",
   'frame-src https://www.youtube-nocookie.com https://player.vimeo.com',
   "frame-ancestors 'self'",
@@ -35,8 +39,9 @@ const contentSecurityPolicy = [
 ].join('; ')
 
 const nextConfig: NextConfig = {
-  // Self-contained server bundle for the Docker image. `next start` and Vercel are unaffected.
-  output: 'standalone',
+  // Docker copies `.next/standalone`. On Vercel, standalone tracing with Next 15.4
+  // left dynamic routes as a static /500. Leave the default output there.
+  ...(process.env.VERCEL ? {} : { output: 'standalone' as const }),
   images: {
     formats: ['image/avif', 'image/webp'],
     localPatterns: [{ pathname: '/api/media/file/**' }],
@@ -54,6 +59,7 @@ const nextConfig: NextConfig = {
       ],
     },
   ],
+  serverExternalPackages: ['libsql', '@libsql/client', '@payloadcms/db-sqlite'],
   webpack: (webpackConfig) => {
     webpackConfig.resolve.extensionAlias = {
       '.cjs': ['.cts', '.cjs'],

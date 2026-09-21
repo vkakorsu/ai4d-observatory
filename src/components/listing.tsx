@@ -52,18 +52,20 @@ export function Item({
         ) : (
           <TypeCover type={type} title={title} />
         ))}
-      <div className="item__type">
-        <span className="dot" aria-hidden="true" />
-        <span>{type}</span>
-        {date && <time dateTime={date}>{formatDate(date)}</time>}
-        <ProvenanceBadge provenance={str(doc.provenance)} show={showNotices} />
+      <div className="item__body">
+        <div className="item__type">
+          <span className="dot" aria-hidden="true" />
+          <span>{type}</span>
+          {date && <time dateTime={date}>{formatDate(date)}</time>}
+          <ProvenanceBadge provenance={str(doc.provenance)} show={showNotices} />
+        </div>
+        <h3 className="item__title">
+          <Link href={href}>{title}</Link>
+        </h3>
+        {!compact && str(doc.summary) && <p className="item__summary">{str(doc.summary)}</p>}
+        {meta && <div className="item__meta">{meta}</div>}
+        {!compact && <TaxChips doc={doc} limit={4} />}
       </div>
-      <h3 className="item__title">
-        <Link href={href}>{title}</Link>
-      </h3>
-      {!compact && str(doc.summary) && <p className="item__summary">{str(doc.summary)}</p>}
-      {meta && <div className="item__meta">{meta}</div>}
-      {!compact && <TaxChips doc={doc} limit={4} />}
     </article>
   )
 }

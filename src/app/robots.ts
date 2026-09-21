@@ -7,7 +7,7 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: noindex
       ? [{ userAgent: '*', disallow: '/' }]
-      : [{ userAgent: '*', allow: '/', disallow: ['/admin', '/api/', '/download/', '/search', '/prototype-notes'] }],
+      : [{ userAgent: '*', allow: '/', disallow: ['/admin', '/sign-in', '/api/', '/download/', '/search', '/prototype-notes'] }],
     sitemap: absoluteUrl('/sitemap.xml'),
   }
 }

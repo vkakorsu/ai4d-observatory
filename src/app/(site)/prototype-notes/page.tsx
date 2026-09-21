@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { Breadcrumbs, PageHeader, PendingBadge, Section } from '@/components/ui'
 import { getPayloadClient } from '@/lib/payload'
 import { countPublished, getSettings } from '@/lib/site'
-import { CONTENT_TYPES, RFP_MODULES, contentTypeList } from '@/lib/content-types'
+import { RFP_MODULES, contentTypeList } from '@/lib/content-types'
 import { selectProvider } from '@/lib/newsletter'
 
 export const revalidate = 0

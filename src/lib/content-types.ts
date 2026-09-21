@@ -254,3 +254,37 @@ export const pathFor = (collection: ContentTypeKey, slug: string): string => {
 
 export const labelFor = (collection: string): string =>
   (CONTENT_TYPES as Record<string, ContentTypeDef>)[collection]?.label ?? collection
+
+/**
+ * First URL segment owned by a filesystem route. The CMS catch-all at `/[slug]`
+ * must not claim these, or `/data` becomes a 404 when no Page document exists.
+ */
+export const FILESYSTEM_TOP_SLUGS = new Set([
+  'about',
+  'admin',
+  'api',
+  'blog',
+  'commentary',
+  'countries',
+  'data',
+  'datasets',
+  'dimensions',
+  'directory',
+  'download',
+  'enablers',
+  'events',
+  'feed',
+  'learning',
+  'news',
+  'newsletter',
+  'op-eds',
+  'opportunities',
+  'organisations',
+  'people',
+  'prototype-notes',
+  'publications',
+  'search',
+  'sign-in',
+  'topics',
+  'use-cases',
+])

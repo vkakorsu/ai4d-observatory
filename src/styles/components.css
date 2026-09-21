@@ -507,15 +507,15 @@ a.stat:hover .stat__l {
 .item--with-cover {
   grid-template-columns: 1fr;
 }
+.item__body {
+  display: grid;
+  gap: var(--s-2);
+  min-width: 0;
+}
 @media (min-width: 40em) {
   .item--with-cover {
-    grid-template-columns: 7.5rem 1fr;
-  }
-  .item--with-cover .item__body {
-    grid-column: 2;
-  }
-  .item--with-cover .tcover {
-    grid-row: 1 / span 3;
+    grid-template-columns: 7.5rem minmax(0, 1fr);
+    align-items: start;
   }
 }
 .item__type {
@@ -639,18 +639,32 @@ a.stat:hover .stat__l {
 }
 
 /* ---------- Chips, badges ---------- */
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.3rem;
+  align-items: center;
+  min-width: 0;
+}
 .chip {
   display: inline-flex;
   align-items: center;
-  gap: var(--s-1);
-  padding: 0.15rem 0.55rem;
+  flex: 0 0 auto;
+  gap: 0.2em;
+  max-width: 100%;
+  padding: 0.05rem 0.4rem;
   border: 1px solid var(--ink-16);
   border-radius: 999px;
-  font-size: var(--step--1);
+  font-family: var(--font-text);
+  font-size: 0.6875rem;
+  letter-spacing: 0.01em;
   color: var(--ink-72);
   text-decoration: none;
   background: var(--surface);
-  line-height: 1.4;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
 }
 a.chip:hover {
@@ -667,7 +681,7 @@ a.chip:hover {
 }
 .chip--remove::after {
   content: '×';
-  font-size: 1rem;
+  font-size: 0.85em;
   line-height: 1;
   color: var(--ink-56);
 }
@@ -712,15 +726,26 @@ a.chip:hover {
   gap: var(--s-6);
   align-items: start;
 }
+.layout-rail > :last-child {
+  min-width: 0;
+  isolation: isolate;
+  position: relative;
+  z-index: 0;
+}
+.rail {
+  position: relative;
+  z-index: 4;
+  background: var(--paper);
+}
 @media (min-width: 64em) {
   .layout-rail {
     grid-template-columns: 17rem minmax(0, 1fr);
     gap: var(--s-8);
   }
-}
-.rail {
-  position: sticky;
-  top: var(--s-4);
+  .rail {
+    position: sticky;
+    top: var(--s-4);
+  }
 }
 .results-head {
   display: flex;
@@ -753,6 +778,8 @@ a.chip:hover {
   background: var(--surface);
   border: var(--rule);
   padding: var(--s-4);
+  position: relative;
+  z-index: 1;
 }
 .filters summary {
   cursor: pointer;

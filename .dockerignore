@@ -4,9 +4,10 @@ node_modules
 .env
 .env.*
 !.env.example
-data
-media
-export
+# Root-only. Unanchored `data` would exclude src/app/(site)/data from the image.
+/data
+/media
+/export
 coverage
 *.tsbuildinfo
 README.md

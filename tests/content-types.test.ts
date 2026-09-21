@@ -1,8 +1,16 @@
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 import config from '@payload-config'
-import { CONTENT_TYPES, contentTypeList, labelFor, pathFor, RFP_MODULES, searchableTypes } from '@/lib/content-types'
+import {
+  CONTENT_TYPES,
+  contentTypeList,
+  FILESYSTEM_TOP_SLUGS,
+  labelFor,
+  pathFor,
+  RFP_MODULES,
+  searchableTypes,
+} from '@/lib/content-types'
 
 /**
  * Content type registry. Every module named in Section 3.1.2 of the RFP must have a collection,
@@ -88,5 +96,40 @@ describe('pathFor and labelFor', () => {
   it('falls back to the collection slug for unknown labels', () => {
     expect(labelFor('publications')).toBe('Publication')
     expect(labelFor('something-else')).toBe('something-else')
+  })
+})
+
+describe('deploy ignore files', () => {
+  it('keeps the App Router /data route out of ignore rules', () => {
+    expect(FILESYSTEM_TOP_SLUGS.has('data')).toBe(true)
+    const root = path.resolve(__dirname, '..')
+    for (const file of ['.vercelignore', '.dockerignore']) {
+      const patterns = readFileSync(path.join(root, file), 'utf8')
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter((line) => line && !line.startsWith('#'))
+      expect(patterns, file).not.toContain('data')
+      expect(patterns, file).not.toContain('media')
+      expect(patterns, file).not.toContain('export')
+      expect(
+        patterns.some((pattern) => pattern === '/data' || pattern === '/data/'),
+        `${file} must ignore only the root SQLite directory`,
+      ).toBe(true)
+    }
+  })
+
+  it('does not statically import the SQLite adapter', () => {
+    const root = path.resolve(__dirname, '..')
+    const payloadConfig = readFileSync(path.join(root, 'src/payload.config.ts'), 'utf8')
+    const database = readFileSync(path.join(root, 'src/lib/database.ts'), 'utf8')
+    expect(payloadConfig).not.toMatch(/@payloadcms\/db-sqlite/)
+    expect(database).not.toMatch(/from ['"]@payloadcms\/db-sqlite['"]/)
+    expect(database).toMatch(/await import\(['"]@payloadcms\/db-sqlite['"]\)/)
+  })
+
+  it('keeps the Vercel Blob upload handler in the Payload import map', () => {
+    const root = path.resolve(__dirname, '..')
+    const importMap = readFileSync(path.join(root, 'src/app/(payload)/admin/importMap.js'), 'utf8')
+    expect(importMap).toMatch(/@payloadcms\/storage-vercel-blob\/client#VercelBlobClientUploadHandler/)
   })
 })

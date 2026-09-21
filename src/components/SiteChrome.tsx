@@ -132,7 +132,7 @@ export function SiteFooter({ settings }: { settings: SiteSetting }) {
         <div className="footer-legal">
           <span>© {new Date().getFullYear()} LIRNEasia. Content licensed CC BY 4.0 unless stated.</span>
           <Link href="/prototype-notes">Prototype notes</Link>
-          <a href="/admin">Editor login</a>
+          <Link href="/sign-in">Editor login</Link>
         </div>
       </div>
     </footer>

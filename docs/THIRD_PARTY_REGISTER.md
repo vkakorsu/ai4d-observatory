@@ -7,7 +7,7 @@ Required by Sections 3.1.5 (e), 3.1.8 (b) and 3.2 ("third-party service/licence 
 | Component | Version | Licence | Purpose | Recurring cost | Ownership and lock-in |
 |---|---|---|---|---|---|
 | Node.js | 22 LTS | MIT | Runtime | None | Open source |
-| Next.js, React | 16.3 / 19.2 | MIT | Web framework, server rendering, image pipeline | None | Open source |
+| Next.js, React | 15.4 / 19.2 | MIT | Web framework, server rendering, image pipeline | None | Open source |
 | Payload CMS and first-party packages (`payload`, `@payloadcms/next`, `@payloadcms/ui`, `@payloadcms/richtext-lexical`, `@payloadcms/db-postgres`, `@payloadcms/db-sqlite`, `@payloadcms/plugin-search`, `@payloadcms/plugin-import-export`, `@payloadcms/storage-vercel-blob`) | 3.90 | MIT | Content management, admin dashboard, access control, versions, search index, CSV/JSON export, media storage adapter | None | Open source. Payload has been part of Figma since June 2025 and remains MIT licensed. Content lives in the Client's PostgreSQL database and is exportable with the included scripts |
 | Drizzle ORM (via Payload) | bundled | Apache 2.0 | Database access and migrations | None | Open source |
 | PostgreSQL | 16 | PostgreSQL licence | Production database | None | Open source, standard SQL dumps |
