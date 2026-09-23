@@ -215,26 +215,33 @@ const seedTaxonomies = async (payload: Payload) => {
 /* ---------------------------------------------------------------- media */
 
 /**
- * Find a seeded file by its intended name. Storage renames a file on collision (`cover-x.svg` becomes
- * `cover-x-1.svg`), so an exact match missed it and every re-seed uploaded another copy. This matches the
- * name with or without a numeric suffix and prefers the most recent, so re-seeding is idempotent.
+ * Find a file the seed uploaded earlier. Storage renames a file when its name is taken, and not always the same
+ * way: `cover-x.svg` becomes `cover-x-1.svg`, but `annual-report-2026.pdf` becomes `annual-report-2027.pdf`.
+ * So a seeded file is recognised by its alt text (the seed gives every file a unique one) plus a filename that
+ * matches once trailing numbers are ignored. The newest match wins. This keeps re-seeding idempotent.
  */
-const findMedia = async (payload: Payload, name: string) => {
+const findMedia = async (payload: Payload, name: string, alt: string) => {
   const dot = name.lastIndexOf('.')
-  const stem = dot > 0 ? name.slice(0, dot) : name
-  const ext = dot > 0 ? name.slice(dot) : ''
+  const ext = dot > 0 ? name.slice(dot).toLowerCase() : ''
+  const root = (n: string) => {
+    const d = n.lastIndexOf('.')
+    return (d > 0 ? n.slice(0, d) : n).replace(/[\d-]+$/, '')
+  }
   const res = await payload.find({
     collection: 'media',
-    where: { filename: { like: stem } },
+    where: { alt: { equals: alt } },
     sort: '-createdAt',
     limit: 50,
     depth: 0,
     overrideAccess: true,
     pagination: false,
   })
-  const escape = (x: string) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  const pattern = new RegExp(`^${escape(stem)}(-\\d+)?${escape(ext)}$`)
-  return res.docs.find((d) => pattern.test(String(d.filename ?? ''))) ?? null
+  return (
+    res.docs.find((d) => {
+      const f = String(d.filename ?? '')
+      return f.toLowerCase().endsWith(ext) && root(f) === root(name)
+    }) ?? null
+  )
 }
 
 type FileSpec = { name: string; gated?: boolean; title: string; kind?: 'pdf' | 'csv' }
@@ -245,7 +252,7 @@ const mimeFor = (name: string) =>
 /** Upload a generated sample file unless a media item with this filename already exists. */
 const upsertFile = async (payload: Payload, spec: FileSpec, lines: string[] = []): Promise<Id> => {
   if (reg.has('media', spec.name)) return reg.get('media', spec.name)
-  const existing = await findMedia(payload, spec.name)
+  const existing = await findMedia(payload, spec.name, spec.title)
   const data = {
     alt: spec.title,
     access: spec.gated ? ('gated' as const) : ('open' as const),
@@ -283,7 +290,7 @@ const upsertCover = async (
 ): Promise<Id> => {
   const name = `cover-${slug}.svg`
   if (reg.has('media', name)) return reg.get('media', name)
-  const existing = await findMedia(payload, name)
+  const existing = await findMedia(payload, name, `${label}. ${title}`)
   const data = {
     alt: `${label}. ${title}`,
     access: 'open' as const,
@@ -840,7 +847,17 @@ const main = async () => {
   mkdirSync('data', { recursive: true })
   mkdirSync('media', { recursive: true })
   const payload = await getPayload({ config })
-  console.log(`Seeding ${process.env.DATABASE_URI || 'file:./data/ai4d.db'}`)
+  // Never print credentials: show only the scheme, host and database name.
+  const target = (() => {
+    const uri = process.env.DATABASE_URI || 'file:./data/ai4d.db'
+    try {
+      const u = new URL(uri)
+      return u.protocol === 'file:' ? uri : `${u.protocol}//${u.hostname}${u.pathname}`
+    } catch {
+      return uri.replace(/\/\/[^@/]*@/, '//***@')
+    }
+  })()
+  console.log(`Seeding ${target}`)
 
   await seedUsers(payload)
   await seedTaxonomies(payload)
