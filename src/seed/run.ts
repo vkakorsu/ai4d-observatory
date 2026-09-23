@@ -36,7 +36,10 @@ class Registry {
   }
   get(collection: string, slug: string): Id {
     const id = this.map.get(`${collection}:${slug}`)
-    if (id === undefined) throw new Error(`Seed references ${collection} "${slug}" which does not exist. Check src/seed/content.ts.`)
+    if (id === undefined)
+      throw new Error(
+        `Seed references ${collection} "${slug}" which does not exist. Check src/seed/content.ts.`,
+      )
     return id
   }
   has(collection: string, slug: string) {
@@ -55,16 +58,40 @@ const reg = new Registry()
 
 /** Find one document by a where clause, or null. */
 const findOne = async (payload: Payload, collection: CollectionSlug, where: Where) => {
-  const res = await payload.find({ collection, where, limit: 1, depth: 0, overrideAccess: true, pagination: false, draft: true })
+  const res = await payload.find({
+    collection,
+    where,
+    limit: 1,
+    depth: 0,
+    overrideAccess: true,
+    pagination: false,
+    draft: true,
+  })
   return (res.docs[0] as unknown as Doc | undefined) ?? null
 }
 
 /** Create or update by slug. Returns the id. */
-const upsertBySlug = async (payload: Payload, collection: CollectionSlug, slug: string, data: Doc): Promise<Id> => {
+const upsertBySlug = async (
+  payload: Payload,
+  collection: CollectionSlug,
+  slug: string,
+  data: Doc,
+): Promise<Id> => {
   const existing = await findOne(payload, collection, { slug: { equals: slug } })
   const doc = existing
-    ? await payload.update({ collection, id: existing.id as Id, data: data as never, depth: 0, overrideAccess: true })
-    : await payload.create({ collection, data: { ...data, slug } as never, depth: 0, overrideAccess: true })
+    ? await payload.update({
+        collection,
+        id: existing.id as Id,
+        data: data as never,
+        depth: 0,
+        overrideAccess: true,
+      })
+    : await payload.create({
+        collection,
+        data: { ...data, slug } as never,
+        depth: 0,
+        overrideAccess: true,
+      })
   const id = (doc as unknown as Doc).id as Id
   reg.set(collection, slug, id)
   return id
@@ -82,7 +109,13 @@ const taxonomies = (r: SeedRecord): Doc => ({
 })
 
 /** Explicit related-content picks, resolved after every content item exists. */
-type Related = { useCases?: readonly string[]; publications?: readonly string[]; datasets?: readonly string[]; events?: readonly string[]; learning?: readonly string[] }
+type Related = {
+  useCases?: readonly string[]
+  publications?: readonly string[]
+  datasets?: readonly string[]
+  events?: readonly string[]
+  learning?: readonly string[]
+}
 const relatedFields = (rel: Related | undefined): Doc =>
   rel
     ? {
@@ -98,17 +131,55 @@ const relatedFields = (rel: Related | undefined): Doc =>
 
 const seedUsers = async (payload: Payload) => {
   heading('Users')
+  // Re-seeding a live host must not reset the passwords editors have set since. SEED_SKIP_USERS=true leaves accounts alone.
+  if (process.env.SEED_SKIP_USERS === 'true') {
+    log('skipped (SEED_SKIP_USERS=true); existing accounts and passwords are unchanged')
+    return
+  }
+  // Never create publicly documented default passwords on a server.
+  if (
+    process.env.NODE_ENV === 'production' &&
+    (!process.env.SEED_ADMIN_PASSWORD || !process.env.SEED_EDITOR_PASSWORD)
+  ) {
+    throw new Error(
+      'Set SEED_ADMIN_PASSWORD and SEED_EDITOR_PASSWORD, or SEED_SKIP_USERS=true, before seeding a production database.',
+    )
+  }
   const users = [
-    { email: process.env.SEED_ADMIN_EMAIL || 'admin@example.org', password: process.env.SEED_ADMIN_PASSWORD || 'ObservatoryAdmin2026!', name: 'Demo administrator', role: 'admin' },
-    { email: process.env.SEED_EDITOR_EMAIL || 'editor@example.org', password: process.env.SEED_EDITOR_PASSWORD || 'ObservatoryEditor2026!', name: 'Demo editor', role: 'editor' },
+    {
+      email: process.env.SEED_ADMIN_EMAIL || 'admin@example.org',
+      password: process.env.SEED_ADMIN_PASSWORD || 'ObservatoryAdmin2026!',
+      name: 'Demo administrator',
+      role: 'admin',
+    },
+    {
+      email: process.env.SEED_EDITOR_EMAIL || 'editor@example.org',
+      password: process.env.SEED_EDITOR_PASSWORD || 'ObservatoryEditor2026!',
+      name: 'Demo editor',
+      role: 'editor',
+    },
   ]
   for (const u of users) {
     const existing = await findOne(payload, 'users', { email: { equals: u.email } })
     if (existing) {
-      await payload.update({ collection: 'users', id: existing.id as Id, data: { name: u.name, role: u.role as 'admin' | 'editor', password: u.password }, overrideAccess: true })
+      await payload.update({
+        collection: 'users',
+        id: existing.id as Id,
+        data: { name: u.name, role: u.role as 'admin' | 'editor', password: u.password },
+        overrideAccess: true,
+      })
       log(`updated ${u.email} (${u.role})`)
     } else {
-      await payload.create({ collection: 'users', data: { email: u.email, password: u.password, name: u.name, role: u.role as 'admin' | 'editor' }, overrideAccess: true })
+      await payload.create({
+        collection: 'users',
+        data: {
+          email: u.email,
+          password: u.password,
+          name: u.name,
+          role: u.role as 'admin' | 'editor',
+        },
+        overrideAccess: true,
+      })
       log(`created ${u.email} (${u.role})`)
     }
   }
@@ -116,7 +187,11 @@ const seedUsers = async (payload: Payload) => {
 
 /* ----------------------------------------------------------- taxonomies */
 
-const seedTaxonomy = async (payload: Payload, collection: CollectionSlug, items: readonly SeedRecord[]) => {
+const seedTaxonomy = async (
+  payload: Payload,
+  collection: CollectionSlug,
+  items: readonly SeedRecord[],
+) => {
   let n = 0
   for (const item of items) {
     const { name, ...rest } = item
@@ -141,7 +216,8 @@ const seedTaxonomies = async (payload: Payload) => {
 
 type FileSpec = { name: string; gated?: boolean; title: string; kind?: 'pdf' | 'csv' }
 
-const mimeFor = (name: string) => (name.endsWith('.csv') ? 'text/csv' : name.endsWith('.svg') ? 'image/svg+xml' : 'application/pdf')
+const mimeFor = (name: string) =>
+  name.endsWith('.csv') ? 'text/csv' : name.endsWith('.svg') ? 'image/svg+xml' : 'application/pdf'
 
 /** Upload a generated sample file unless a media item with this filename already exists. */
 const upsertFile = async (payload: Payload, spec: FileSpec, lines: string[] = []): Promise<Id> => {
@@ -159,7 +235,10 @@ const upsertFile = async (payload: Payload, spec: FileSpec, lines: string[] = []
   }
   const buffer =
     spec.kind === 'csv' || spec.name.endsWith('.csv')
-      ? sampleCsv(['indicator', 'country', 'iso3', 'year', 'value'], lines.map((l) => l.split(',')))
+      ? sampleCsv(
+          ['indicator', 'country', 'iso3', 'year', 'value'],
+          lines.map((l) => l.split(',')),
+        )
       : samplePdf(spec.title, lines)
   const doc = await payload.create({
     collection: 'media',
@@ -172,11 +251,21 @@ const upsertFile = async (payload: Payload, spec: FileSpec, lines: string[] = []
 }
 
 /** Typographic cover image for an item without a photograph. */
-const upsertCover = async (payload: Payload, slug: string, label: string, title: string, fill?: string): Promise<Id> => {
+const upsertCover = async (
+  payload: Payload,
+  slug: string,
+  label: string,
+  title: string,
+  fill?: string,
+): Promise<Id> => {
   const name = `cover-${slug}.svg`
   if (reg.has('media', name)) return reg.get('media', name)
   const existing = await findOne(payload, 'media', { filename: { equals: name } })
-  const data = { alt: `${label}. ${title}`, access: 'open' as const, caption: 'Sample image pending client asset.' }
+  const data = {
+    alt: `${label}. ${title}`,
+    access: 'open' as const,
+    caption: 'Sample image pending client asset.',
+  }
   if (existing) {
     reg.set('media', name, existing.id as Id)
     return existing.id as Id
@@ -281,14 +370,31 @@ const seedIndicatorValues = async (payload: Payload) => {
       const country = countriesByIso.get(iso3)
       if (!country) throw new Error(`Indicator values reference unknown country ${iso3}`)
       for (const [year, value] of series) {
-        const where: Where = { and: [{ indicator: { equals: indicator } }, { country: { equals: country } }, { year: { equals: year } }] }
+        const where: Where = {
+          and: [
+            { indicator: { equals: indicator } },
+            { country: { equals: country } },
+            { year: { equals: year } },
+          ],
+        }
         const existing = await findOne(payload, 'indicator-values', where)
         const data = { indicator, country, year, value, provenance: 'sample' as const }
         if (existing) {
-          await payload.update({ collection: 'indicator-values', id: existing.id as Id, data, overrideAccess: true, depth: 0 })
+          await payload.update({
+            collection: 'indicator-values',
+            id: existing.id as Id,
+            data,
+            overrideAccess: true,
+            depth: 0,
+          })
           updated++
         } else {
-          await payload.create({ collection: 'indicator-values', data, overrideAccess: true, depth: 0 })
+          await payload.create({
+            collection: 'indicator-values',
+            data,
+            overrideAccess: true,
+            depth: 0,
+          })
           created++
         }
       }
@@ -328,14 +434,23 @@ const seedUseCases = async (payload: Payload) => {
   log(`${content.useCases.length} use cases`)
 }
 
-const pdfLines = (r: SeedRecord) => [String(r.summary ?? ''), '', plainText(r.abstract as never).split('\n')[0] ?? ''].filter((l) => l !== undefined)
+const pdfLines = (r: SeedRecord) =>
+  [String(r.summary ?? ''), '', plainText(r.abstract as never).split('\n')[0] ?? ''].filter(
+    (l) => l !== undefined,
+  )
 
 const seedPublications = async (payload: Payload) => {
   heading('Publications')
   for (const p of content.publications as readonly SeedRecord[]) {
     const spec = p.file as FileSpec | undefined
     const file = spec ? await upsertFile(payload, spec, pdfLines(p)) : undefined
-    const cover = await upsertCover(payload, String(p.slug), String(p.type).replace(/-/g, ' '), String(p.title), '#95bda9')
+    const cover = await upsertCover(
+      payload,
+      String(p.slug),
+      String(p.type).replace(/-/g, ' '),
+      String(p.title),
+      '#95bda9',
+    )
     await upsertBySlug(
       payload,
       'publications',
@@ -368,18 +483,34 @@ const indicatorCsvLines = (): string[] => {
   const countryFor = new Map<string, string>(tax.countries.map((c) => [c.iso3, c.name]))
   for (const [ind, byCountry] of Object.entries(content.indicatorValues))
     for (const [iso3, series] of Object.entries(byCountry))
-      for (const [year, value] of series) lines.push([nameFor.get(ind), countryFor.get(iso3), iso3, year, value].join(','))
+      for (const [year, value] of series)
+        lines.push([nameFor.get(ind), countryFor.get(iso3), iso3, year, value].join(','))
   return lines
 }
 
 const seedDatasets = async (payload: Payload) => {
   heading('Datasets')
   for (const d of content.datasets as readonly SeedRecord[]) {
-    const fileSpecs = (d.files ?? []) as Array<{ label: string; name: string; kind?: 'pdf' | 'csv' }>
+    const fileSpecs = (d.files ?? []) as Array<{
+      label: string
+      name: string
+      kind?: 'pdf' | 'csv'
+    }>
     const files = []
     for (const f of fileSpecs) {
-      const lines = f.name === 'regional-indicators.csv' ? indicatorCsvLines() : ['facility_id,district,connectivity,devices,readiness_score', 'F001,Sample district,4G,tablets,62', 'F002,Sample district,3G,none,31']
-      const id = await upsertFile(payload, { name: f.name, title: `${d.title}. ${f.label}`, kind: f.kind }, lines)
+      const lines =
+        f.name === 'regional-indicators.csv'
+          ? indicatorCsvLines()
+          : [
+              'facility_id,district,connectivity,devices,readiness_score',
+              'F001,Sample district,4G,tablets,62',
+              'F002,Sample district,3G,none,31',
+            ]
+      const id = await upsertFile(
+        payload,
+        { name: f.name, title: `${d.title}. ${f.label}`, kind: f.kind },
+        lines,
+      )
       files.push({ label: f.label, file: id })
     }
     await upsertBySlug(
@@ -420,9 +551,17 @@ const seedDatasets = async (payload: Payload) => {
 
 /* -------------------------------------------------------------- commentary */
 
-const seedArticles = async (payload: Payload, collection: 'posts' | 'op-eds' | 'news', items: readonly SeedRecord[], label: string) => {
+const seedArticles = async (
+  payload: Payload,
+  collection: 'posts' | 'op-eds' | 'news',
+  items: readonly SeedRecord[],
+  label: string,
+) => {
   for (const a of items) {
-    const image = collection === 'posts' ? await upsertCover(payload, String(a.slug), 'Blog', String(a.title), '#c3d9cc') : undefined
+    const image =
+      collection === 'posts'
+        ? await upsertCover(payload, String(a.slug), 'Blog', String(a.title), '#c3d9cc')
+        : undefined
     await upsertBySlug(
       payload,
       collection,
@@ -535,7 +674,8 @@ const seedOpportunities = async (payload: Payload) => {
 }
 
 type PolyRef = { relationTo: string; slug: string }
-const poly = (refs: readonly PolyRef[] | undefined) => (refs ?? []).map((r) => ({ relationTo: r.relationTo, value: reg.get(r.relationTo, r.slug) }))
+const poly = (refs: readonly PolyRef[] | undefined) =>
+  (refs ?? []).map((r) => ({ relationTo: r.relationTo, value: reg.get(r.relationTo, r.slug) }))
 
 const seedNewsletters = async (payload: Payload) => {
   heading('Newsletters')
@@ -568,7 +708,13 @@ const seedPages = async (payload: Payload) => {
       payload,
       'pages',
       String(p.slug),
-      published({ title: p.title, summary: p.summary, body: p.body, provenance: p.provenance ?? 'sample', publishedAt: new Date().toISOString() }),
+      published({
+        title: p.title,
+        summary: p.summary,
+        body: p.body,
+        provenance: p.provenance ?? 'sample',
+        publishedAt: new Date().toISOString(),
+      }),
     )
   }
   log(`${content.pages.length} pages`)
@@ -592,7 +738,13 @@ const seedRelated = async (payload: Payload) => {
     for (const item of items) {
       const rel = item.related as Related | undefined
       if (!rel) continue
-      await payload.update({ collection, id: reg.get(collection, String(item.slug)), data: relatedFields(rel) as never, overrideAccess: true, depth: 0 })
+      await payload.update({
+        collection,
+        id: reg.get(collection, String(item.slug)),
+        data: relatedFields(rel) as never,
+        overrideAccess: true,
+        depth: 0,
+      })
       n++
     }
   }
@@ -636,8 +788,23 @@ const seedGlobals = async (payload: Payload) => {
 const summary = async (payload: Payload) => {
   heading('Summary')
   const collections: CollectionSlug[] = [
-    'use-cases', 'publications', 'datasets', 'indicators', 'indicator-values', 'posts', 'op-eds', 'news',
-    'people', 'organisations', 'events', 'learning-resources', 'opportunities', 'newsletters', 'pages', 'media', 'search',
+    'use-cases',
+    'publications',
+    'datasets',
+    'indicators',
+    'indicator-values',
+    'posts',
+    'op-eds',
+    'news',
+    'people',
+    'organisations',
+    'events',
+    'learning-resources',
+    'opportunities',
+    'newsletters',
+    'pages',
+    'media',
+    'search',
   ]
   for (const c of collections) {
     const res = await payload.count({ collection: c, overrideAccess: true })
@@ -675,8 +842,12 @@ const main = async () => {
   await summary(payload)
 
   console.log(`\nDone in ${((Date.now() - started) / 1000).toFixed(1)}s.`)
-  console.log(`Admin: ${process.env.SEED_ADMIN_EMAIL || 'admin@example.org'}  Editor: ${process.env.SEED_EDITOR_EMAIL || 'editor@example.org'}`)
-  console.log('Passwords are in .env (SEED_ADMIN_PASSWORD, SEED_EDITOR_PASSWORD). Change them before any public deployment.')
+  console.log(
+    `Admin: ${process.env.SEED_ADMIN_EMAIL || 'admin@example.org'}  Editor: ${process.env.SEED_EDITOR_EMAIL || 'editor@example.org'}`,
+  )
+  console.log(
+    'Passwords are in .env (SEED_ADMIN_PASSWORD, SEED_EDITOR_PASSWORD). Change them before any public deployment.',
+  )
 }
 
 main()
