@@ -2,6 +2,7 @@ import Link from '@/components/SmartLink'
 import type { ReactNode } from 'react'
 import { Icon } from './Icon'
 import { ProvenanceBadge, TaxChips } from './ui'
+import { FilterDisclosure } from './FilterDisclosure'
 import { isPlaceholderImage, MosaicCover, ReportCover } from './ArtCover'
 import { formatDate } from '@/lib/format'
 import { CONTENT_TYPES, pathFor, type ContentTypeKey } from '@/lib/content-types'
@@ -129,12 +130,7 @@ export function Filters({
   const q = getParam(sp, 'q') ?? ''
   return (
     <>
-      {/* Collapsed on phones so results come first; opened before first paint on wider screens, and always open while a filter is active. */}
-      <details
-        className="filters"
-        open={active > 0 || Boolean(q) || undefined}
-        suppressHydrationWarning
-      >
+      <FilterDisclosure active={active > 0 || Boolean(q)} signature={JSON.stringify(sp)}>
         <summary>
           <span>
             <Icon name="filter" size={16} /> Filters{active ? ` (${active})` : ''}
@@ -183,7 +179,8 @@ export function Filters({
             )}
           </div>
         </form>
-      </details>
+      </FilterDisclosure>
+      {/* Opens the panel before first paint on wider screens, so desktop never sees it collapse and reopen. */}
       <script
         dangerouslySetInnerHTML={{
           __html: `(function(){var d=document.currentScript.previousElementSibling;if(d&&window.matchMedia&&matchMedia('(min-width: 64em)').matches)d.open=true})()`,
