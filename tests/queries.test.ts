@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { activeFilterCount, buildWhere, getPage, getParamList, NO_MATCH_ID, withParam, type FilterDef } from '@/lib/queries'
+import {
+  activeFilterCount,
+  buildWhere,
+  getPage,
+  getParamList,
+  NO_MATCH_ID,
+  withParam,
+  type FilterDef,
+} from '@/lib/queries'
 import { publicationFilters, useCaseFilters } from '@/lib/filters'
 
 /** Filter query builder from URL parameters (PROTOTYPE_SPEC section 10). */
@@ -46,12 +54,16 @@ describe('buildWhere', () => {
       expect(slugs).toEqual(['sri-lanka', 'india'])
       return [144, 356]
     })
-    expect(where).toEqual({ and: [{ _status: { equals: 'published' } }, { countries: { in: [144, 356] } }] })
+    expect(where).toEqual({
+      and: [{ _status: { equals: 'published' } }, { countries: { in: [144, 356] } }],
+    })
   })
 
   it('yields no results, not all results, for an unknown taxonomy slug', () => {
     const where = buildWhere({ country: 'atlantis' }, defs, () => [])
-    expect(where).toEqual({ and: [{ _status: { equals: 'published' } }, { id: { equals: NO_MATCH_ID } }] })
+    expect(where).toEqual({
+      and: [{ _status: { equals: 'published' } }, { id: { equals: NO_MATCH_ID } }],
+    })
   })
 
   it('handles select, number and boolean kinds', () => {
@@ -72,12 +84,18 @@ describe('buildWhere', () => {
   })
 
   it('accepts a custom base clause', () => {
-    const where = buildWhere({ stage: 'pilot' }, defs, () => [], { affiliation: { equals: 'team' } })
-    expect(where).toEqual({ and: [{ affiliation: { equals: 'team' } }, { stage: { in: ['pilot'] } }] })
+    const where = buildWhere({ stage: 'pilot' }, defs, () => [], {
+      affiliation: { equals: 'team' },
+    })
+    expect(where).toEqual({
+      and: [{ affiliation: { equals: 'team' } }, { stage: { in: ['pilot'] } }],
+    })
   })
 
   it('ignores parameters that are not filter definitions', () => {
-    expect(buildWhere({ q: 'flood', page: '2', utm_source: 'x' }, defs)).toEqual({ _status: { equals: 'published' } })
+    expect(buildWhere({ q: 'flood', page: '2', utm_source: 'x' }, defs)).toEqual({
+      _status: { equals: 'published' },
+    })
   })
 })
 
@@ -103,7 +121,9 @@ describe('listing filter definitions', () => {
 
 describe('withParam', () => {
   it('replaces one parameter and resets the page', () => {
-    expect(withParam({ country: 'lk', page: '3' }, 'stage', 'pilot')).toBe('?country=lk&stage=pilot')
+    expect(withParam({ country: 'lk', page: '3' }, 'stage', 'pilot')).toBe(
+      '?country=lk&stage=pilot',
+    )
   })
 
   it('removes a parameter when the value is empty', () => {
@@ -115,5 +135,33 @@ describe('withParam', () => {
     expect(withParam({ country: ['lk', 'in'], page: '2' }, 'sort', 'title', false)).toBe(
       '?country=lk&country=in&page=2&sort=title',
     )
+  })
+})
+
+describe('publication groups', () => {
+  it('expands a group into its publication types as one filter', () => {
+    const where = buildWhere({ group: 'briefs' }, publicationFilters)
+    expect(where).toEqual({
+      and: [
+        { _status: { equals: 'published' } },
+        { type: { in: ['research-brief', 'policy-brief', 'innovation-brief'] } },
+      ],
+    })
+    expect(activeFilterCount({ group: 'briefs' }, publicationFilters)).toBe(1)
+  })
+
+  it('combines a group with a type and with other filters', () => {
+    const where = buildWhere({ group: 'reports', type: 'mapping-study' }, publicationFilters) as {
+      and: unknown[]
+    }
+    expect(where.and).toContainEqual({
+      type: { in: ['report', 'mapping-study', 'annual-report', 'comparative-analysis'] },
+    })
+    expect(where.and).toContainEqual({ type: { in: ['mapping-study'] } })
+  })
+
+  it('matches nothing for an unknown group rather than everything', () => {
+    const where = buildWhere({ group: 'nope' }, publicationFilters) as { and: unknown[] }
+    expect(where.and).toContainEqual({ id: { equals: NO_MATCH_ID } })
   })
 })

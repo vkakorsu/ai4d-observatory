@@ -18,6 +18,11 @@ export type FilterDef = {
   multiple?: boolean
   /** Fixed options for select filters. Relationship filters load options from the taxonomy. */
   options?: Array<{ value: string; label: string }>
+  /**
+   * For select filters that stand for several field values, for example a "Reports" group covering four
+   * publication types. Each option value expands to the listed field values.
+   */
+  expand?: Record<string, string[]>
 }
 
 export type SearchParams = Record<string, string | string[] | undefined>
@@ -37,7 +42,10 @@ export const getParamList = (sp: SearchParams, key: string): string[] => {
   const v = sp[key]
   if (!v) return []
   const arr = Array.isArray(v) ? v : [v]
-  return arr.flatMap((x) => x.split(',')).map((x) => x.trim()).filter(Boolean)
+  return arr
+    .flatMap((x) => x.split(','))
+    .map((x) => x.trim())
+    .filter(Boolean)
 }
 
 export const getPage = (sp: SearchParams): number => {
@@ -68,9 +76,14 @@ export const buildWhere = (
         break
       }
       case 'select':
-      case 'text':
-        and.push({ [def.field]: { in: values } })
+      case 'text': {
+        const expanded = def.expand ? values.flatMap((v) => def.expand?.[v] ?? []) : values
+        // An unknown group should yield no results rather than everything.
+        and.push(
+          expanded.length ? { [def.field]: { in: expanded } } : { id: { equals: NO_MATCH_ID } },
+        )
         break
+      }
       case 'number': {
         const nums = values.map(Number).filter((n) => Number.isFinite(n))
         if (nums.length) and.push({ [def.field]: { in: nums } })

@@ -140,7 +140,15 @@ export function Filters({
             <Icon name="filter" size={16} /> Filters{active ? ` (${active})` : ''}
           </span>
         </summary>
-        <form className="filters__body" method="get" action={action} data-autosubmit>
+        {/* Keyed on the URL: after a client-side navigation (a tab, a chip, Back) the uncontrolled selects would
+            otherwise keep showing, and then submit, the previous values. */}
+        <form
+          key={JSON.stringify(sp)}
+          className="filters__body"
+          method="get"
+          action={action}
+          data-autosubmit
+        >
           <div className="filters__group">
             <label htmlFor="f-q">{searchLabel}</label>
             <input id="f-q" type="search" name="q" defaultValue={q} />
@@ -304,6 +312,8 @@ export function Pagination({
 
 /** Progressive enhancement. Submits filter forms on change when JavaScript is available. */
 export function AutoSubmit() {
-  const code = `document.addEventListener('change',function(e){var f=e.target&&e.target.form;if(f&&f.hasAttribute('data-autosubmit')&&e.target.tagName==='SELECT'){f.requestSubmit?f.requestSubmit():f.submit();}});`
+  // Submit filter forms on change, and leave empty fields out so URLs stay short and shareable
+  // (?group=reports&country=india rather than ?q=&group=reports&type=&country=india...).
+  const code = `document.addEventListener('change',function(e){var f=e.target&&e.target.form;if(f&&f.hasAttribute('data-autosubmit')&&e.target.tagName==='SELECT'){f.requestSubmit?f.requestSubmit():f.submit();}});document.addEventListener('submit',function(e){var f=e.target;if(!f||!f.hasAttribute||!f.hasAttribute('data-autosubmit'))return;var off=[];Array.prototype.forEach.call(f.elements,function(el){if(el.name&&!el.disabled&&el.value===''){el.disabled=true;off.push(el);}});setTimeout(function(){off.forEach(function(el){el.disabled=false;});},0);});`
   return <script dangerouslySetInnerHTML={{ __html: code }} />
 }

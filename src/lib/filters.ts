@@ -21,7 +21,30 @@ export const useCaseFilters: FilterDef[] = [
   },
 ]
 
+/** Groups shown as tabs on /publications. Each is one filter value, so it survives "Apply" and shows as one chip. */
+export const PUBLICATION_GROUPS = [
+  {
+    value: 'reports',
+    label: 'Reports and mapping studies',
+    types: ['report', 'mapping-study', 'annual-report', 'comparative-analysis'],
+  },
+  {
+    value: 'briefs',
+    label: 'Briefs',
+    types: ['research-brief', 'policy-brief', 'innovation-brief'],
+  },
+  { value: 'toolkits', label: 'Toolkits', types: ['toolkit'] },
+] as const
+
 export const publicationFilters: FilterDef[] = [
+  {
+    param: 'group',
+    field: 'type',
+    kind: 'select',
+    label: 'Group',
+    options: PUBLICATION_GROUPS.map((g) => ({ value: g.value, label: g.label })),
+    expand: Object.fromEntries(PUBLICATION_GROUPS.map((g) => [g.value, [...g.types]])),
+  },
   {
     param: 'type',
     field: 'type',
@@ -145,10 +168,22 @@ export const peopleFilters: FilterDef[] = [
   },
   { param: 'country', field: 'countries', kind: 'relationship', label: 'Country', multiple: true },
   { param: 'topic', field: 'expertise', kind: 'relationship', label: 'Expertise', multiple: true },
-  { param: 'enabler', field: 'enablers', kind: 'relationship', label: 'Ecosystem enabler', multiple: true },
+  {
+    param: 'enabler',
+    field: 'enablers',
+    kind: 'relationship',
+    label: 'Ecosystem enabler',
+    multiple: true,
+  },
 ]
 
 export const organisationFilters: FilterDef[] = [
-  { param: 'stakeholder', field: 'stakeholderType', kind: 'relationship', label: 'Stakeholder type', multiple: true },
+  {
+    param: 'stakeholder',
+    field: 'stakeholderType',
+    kind: 'relationship',
+    label: 'Stakeholder type',
+    multiple: true,
+  },
   ...standardFilters(),
 ]

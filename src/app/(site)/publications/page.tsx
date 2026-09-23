@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from '@/components/SmartLink'
 import { ListingPage, type PageProps } from '@/components/ListingPage'
-import { publicationFilters } from '@/lib/filters'
+import { PUBLICATION_GROUPS, publicationFilters } from '@/lib/filters'
 import { getParam } from '@/lib/queries'
 
 export const metadata: Metadata = {
@@ -13,17 +13,12 @@ export const metadata: Metadata = {
 
 const GROUPS = [
   { label: 'All', value: '' },
-  {
-    label: 'Reports and mapping studies',
-    value: 'report,mapping-study,annual-report,comparative-analysis',
-  },
-  { label: 'Briefs', value: 'research-brief,policy-brief,innovation-brief' },
-  { label: 'Toolkits', value: 'toolkit' },
+  ...PUBLICATION_GROUPS.map((g) => ({ label: g.label, value: g.value })),
 ]
 
 export default async function PublicationsPage({ searchParams }: PageProps) {
   const sp = await searchParams
-  const current = getParam(sp, 'type') ?? ''
+  const current = getParam(sp, 'group') ?? ''
   return (
     <ListingPage
       collection="publications"
@@ -40,7 +35,7 @@ export default async function PublicationsPage({ searchParams }: PageProps) {
           {GROUPS.map((g) => (
             <Link
               key={g.value}
-              href={g.value ? `/publications?type=${g.value}` : '/publications'}
+              href={g.value ? `/publications?group=${g.value}` : '/publications'}
               aria-current={current === g.value ? 'page' : undefined}
             >
               {g.label}
