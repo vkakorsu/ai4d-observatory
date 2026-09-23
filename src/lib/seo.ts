@@ -22,14 +22,22 @@ type SeoInput = {
   siteName?: string
 }
 
+const isSvg = (u: string) => /\.svg(\?|#|$)/i.test(u)
+
 export const buildMetadata = (input: SeoInput): Metadata => {
   const siteName = input.siteName ?? 'Asia AI4D Observatory'
   const title = input.seo?.metaTitle || input.title
   const description = truncate(input.seo?.metaDescription || input.description || '', 160)
   const seoImage = input.seo?.image && typeof input.seo.image === 'object' ? input.seo.image : null
-  const image = seoImage?.url || input.image?.url
+  // Social platforms do not render SVG previews. Use an uploaded raster image when there is one,
+  // otherwise the item's generated share card (/og/<path>).
+  const raster = [seoImage?.url, input.image?.url].find(
+    (u): u is string => Boolean(u) && !isSvg(u as string),
+  )
   const url = absoluteUrl(input.path)
-  const ogImage = image ? absoluteUrl(image) : absoluteUrl('/opengraph-image')
+  const ogImage = raster
+    ? absoluteUrl(raster)
+    : absoluteUrl(input.path === '/' ? '/og/home' : `/og${input.path}`)
   return {
     title,
     description,
@@ -41,8 +49,16 @@ export const buildMetadata = (input: SeoInput): Metadata => {
       url,
       siteName,
       type: input.type ?? 'website',
-      images: [{ url: ogImage, alt: seoImage?.alt || input.image?.alt || title }],
-      ...(input.publishedAt && input.type === 'article' ? { publishedTime: input.publishedAt } : {}),
+      images: [
+        {
+          url: ogImage,
+          alt: seoImage?.alt || input.image?.alt || title,
+          ...(raster ? {} : { width: 1200, height: 630 }),
+        },
+      ],
+      ...(input.publishedAt && input.type === 'article'
+        ? { publishedTime: input.publishedAt }
+        : {}),
     },
     twitter: { card: 'summary_large_image', title, description, images: [ogImage] },
   }
@@ -50,7 +66,12 @@ export const buildMetadata = (input: SeoInput): Metadata => {
 
 /** JSON-LD helpers. Schema.org types chosen per content type. */
 export const jsonLd = {
-  organisation: (name: string, url: string) => ({ '@context': 'https://schema.org', '@type': 'Organization', name, url }),
+  organisation: (name: string, url: string) => ({
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name,
+    url,
+  }),
   website: (name: string, url: string) => ({
     '@context': 'https://schema.org',
     '@type': 'WebSite',
@@ -62,7 +83,13 @@ export const jsonLd = {
       'query-input': 'required name=search_term_string',
     },
   }),
-  article: (a: { title: string; description?: string; url: string; datePublished?: string | null; authors?: string[] }) => ({
+  article: (a: {
+    title: string
+    description?: string
+    url: string
+    datePublished?: string | null
+    authors?: string[]
+  }) => ({
     '@context': 'https://schema.org',
     '@type': 'Article',
     headline: a.title,
@@ -71,11 +98,24 @@ export const jsonLd = {
     datePublished: a.datePublished ?? undefined,
     author: a.authors?.map((name) => ({ '@type': 'Person', name })),
   }),
-  report: (a: { title: string; description?: string; url: string; datePublished?: string | null; authors?: string[] }) => ({
+  report: (a: {
+    title: string
+    description?: string
+    url: string
+    datePublished?: string | null
+    authors?: string[]
+  }) => ({
     ...jsonLd.article(a),
     '@type': 'Report',
   }),
-  dataset: (d: { title: string; description?: string; url: string; creator?: string; license?: string; temporalCoverage?: string }) => ({
+  dataset: (d: {
+    title: string
+    description?: string
+    url: string
+    creator?: string
+    license?: string
+    temporalCoverage?: string
+  }) => ({
     '@context': 'https://schema.org',
     '@type': 'Dataset',
     name: d.title,
@@ -91,9 +131,9 @@ export const jsonLd = {
     url: string
     startDate: string
     endDate?: string | null
-    online: boolean
+    format: 'online' | 'in-person' | 'hybrid'
     venue?: string | null
-    onlineUrl?: string | null
+    organiser?: string | null
   }) => ({
     '@context': 'https://schema.org',
     '@type': 'Event',
@@ -102,14 +142,27 @@ export const jsonLd = {
     url: e.url,
     startDate: e.startDate,
     endDate: e.endDate ?? undefined,
-    eventAttendanceMode: e.online
-      ? 'https://schema.org/OnlineEventAttendanceMode'
-      : 'https://schema.org/OfflineEventAttendanceMode',
-    location: e.online
-      ? { '@type': 'VirtualLocation', url: e.onlineUrl ?? e.url }
-      : { '@type': 'Place', name: e.venue ?? 'To be announced' },
+    eventStatus: 'https://schema.org/EventScheduled',
+    eventAttendanceMode: {
+      online: 'https://schema.org/OnlineEventAttendanceMode',
+      'in-person': 'https://schema.org/OfflineEventAttendanceMode',
+      hybrid: 'https://schema.org/MixedEventAttendanceMode',
+    }[e.format],
+    // The virtual location points at the event page, never at the join link, which is for registrants.
+    location: [
+      ...(e.format !== 'in-person' ? [{ '@type': 'VirtualLocation', url: e.url }] : []),
+      ...(e.format !== 'online'
+        ? [{ '@type': 'Place', name: e.venue ?? 'To be announced', address: e.venue ?? undefined }]
+        : []),
+    ],
+    organizer: e.organiser ? { '@type': 'Organization', name: e.organiser } : undefined,
   }),
-  person: (p: { name: string; url: string; jobTitle?: string | null; affiliation?: string | null }) => ({
+  person: (p: {
+    name: string
+    url: string
+    jobTitle?: string | null
+    affiliation?: string | null
+  }) => ({
     '@context': 'https://schema.org',
     '@type': 'Person',
     name: p.name,
@@ -120,6 +173,11 @@ export const jsonLd = {
   breadcrumbs: (items: Array<{ name: string; url: string }>) => ({
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
-    itemListElement: items.map((it, i) => ({ '@type': 'ListItem', position: i + 1, name: it.name, item: it.url })),
+    itemListElement: items.map((it, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: it.name,
+      item: it.url,
+    })),
   }),
 }

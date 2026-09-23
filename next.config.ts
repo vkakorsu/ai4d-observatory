@@ -39,11 +39,11 @@ const contentSecurityPolicy = [
 ].join('; ')
 
 const nextConfig: NextConfig = {
-  // Docker copies `.next/standalone`. On Vercel, standalone tracing with Next 15.4
-  // left dynamic routes as a static /500. Leave the default output there.
+  // Docker copies `.next/standalone`. Vercel uses its own output, so standalone is off there.
   ...(process.env.VERCEL ? {} : { output: 'standalone' as const }),
   images: {
-    formats: ['image/avif', 'image/webp'],
+    // WebP only. AVIF optimisation was disabled upstream after the August 2026 libheif advisory (GHSA-2xp9-vwfh-vxw4).
+    formats: ['image/webp'],
     localPatterns: [{ pathname: '/api/media/file/**' }],
   },
   poweredByHeader: false,
@@ -60,14 +60,6 @@ const nextConfig: NextConfig = {
     },
   ],
   serverExternalPackages: ['libsql', '@libsql/client', '@payloadcms/db-sqlite'],
-  webpack: (webpackConfig) => {
-    webpackConfig.resolve.extensionAlias = {
-      '.cjs': ['.cts', '.cjs'],
-      '.js': ['.ts', '.tsx', '.js', '.jsx'],
-      '.mjs': ['.mts', '.mjs'],
-    }
-    return webpackConfig
-  },
   turbopack: {
     root: path.resolve(dirname),
   },

@@ -5,6 +5,11 @@ import { useCaseFilters } from '@/lib/filters'
 import { listCollection } from '@/lib/site'
 import { purgeExpiredRecords, retentionCutoff } from '@/jobs/retention'
 import type { Search, UseCase } from '@/payload-types'
+import { submitGate, submitRegistration } from '@/lib/forms'
+import { verifyGateToken } from '@/lib/gate'
+import { runSearch } from '@/lib/search'
+import { readStoredFile } from '@/lib/media-files'
+import { samplePdf } from '@/seed/files'
 
 /**
  * Boots Payload against the test database (in-memory SQLite by default, see tests/setup.ts),
@@ -34,7 +39,8 @@ beforeAll(async () => {
     collection: 'use-cases',
     data: {
       title: 'Paddy pest advisory by SMS',
-      summary: 'Farmers in the dry zone receive pest alerts derived from field photos and weather data.',
+      summary:
+        'Farmers in the dry zone receive pest alerts derived from field photos and weather data.',
       stage: 'pilot',
       problem: 'Late detection of brown planthopper outbreaks.',
       countries: [ids.lk],
@@ -63,7 +69,10 @@ afterAll(async () => {
 
 describe('taxonomy terms', () => {
   it('generate slugs from names', async () => {
-    const res = await payload.find({ collection: 'countries', where: { slug: { equals: 'sri-lanka' } } })
+    const res = await payload.find({
+      collection: 'countries',
+      where: { slug: { equals: 'sri-lanka' } },
+    })
     expect(res.totalDocs).toBe(1)
     expect(res.docs[0].iso3).toBe('LKA')
   })
@@ -97,9 +106,15 @@ describe('use case listing', () => {
   })
 
   it('matches free text on title and summary', async () => {
-    expect((await listCollection(payload, 'use-cases', { q: 'planthopper' }, useCaseFilters)).totalDocs).toBe(0)
-    expect((await listCollection(payload, 'use-cases', { q: 'pest alerts' }, useCaseFilters)).totalDocs).toBe(1)
-    expect((await listCollection(payload, 'use-cases', { q: 'Paddy' }, useCaseFilters)).totalDocs).toBe(1)
+    expect(
+      (await listCollection(payload, 'use-cases', { q: 'planthopper' }, useCaseFilters)).totalDocs,
+    ).toBe(0)
+    expect(
+      (await listCollection(payload, 'use-cases', { q: 'pest alerts' }, useCaseFilters)).totalDocs,
+    ).toBe(1)
+    expect(
+      (await listCollection(payload, 'use-cases', { q: 'Paddy' }, useCaseFilters)).totalDocs,
+    ).toBe(1)
   })
 
   it('paginates', async () => {
@@ -115,9 +130,18 @@ describe('roles', () => {
   it('lets a contributor draft but not publish', async () => {
     const contributor = await payload.create({
       collection: 'users',
-      data: { name: 'Casey Contributor', email: 'casey@example.org', password: 'a-long-test-password-1', role: 'contributor' },
+      data: {
+        name: 'Casey Contributor',
+        email: 'casey@example.org',
+        password: 'a-long-test-password-1',
+        role: 'contributor',
+      },
     })
-    const base = { title: 'Contributor draft', summary: 'Written by a contributor.', stage: 'concept' as const }
+    const base = {
+      title: 'Contributor draft',
+      summary: 'Written by a contributor.',
+      stage: 'concept' as const,
+    }
 
     const draft = await payload.create({
       collection: 'use-cases',
@@ -128,7 +152,13 @@ describe('roles', () => {
     expect(draft._status).toBe('draft')
 
     await expect(
-      payload.update({ collection: 'use-cases', id: draft.id, data: { _status: 'published' }, user: contributor, overrideAccess: false }),
+      payload.update({
+        collection: 'use-cases',
+        id: draft.id,
+        data: { _status: 'published' },
+        user: contributor,
+        overrideAccess: false,
+      }),
     ).rejects.toThrow(/not publish/)
 
     await expect(
@@ -142,7 +172,12 @@ describe('roles', () => {
 
     const editor = await payload.create({
       collection: 'users',
-      data: { name: 'Erin Editor', email: 'erin@example.org', password: 'a-long-test-password-2', role: 'editor' },
+      data: {
+        name: 'Erin Editor',
+        email: 'erin@example.org',
+        password: 'a-long-test-password-2',
+        role: 'editor',
+      },
     })
     const published = await payload.update({
       collection: 'use-cases',
@@ -164,8 +199,12 @@ describe('roles', () => {
 
 describe('data retention', () => {
   it('computes the cutoff from the retention period', () => {
-    expect(retentionCutoff(24, new Date('2026-09-20T00:00:00Z')).toISOString()).toBe('2024-09-20T00:00:00.000Z')
-    expect(retentionCutoff(1, new Date('2026-03-31T12:00:00Z')).toISOString()).toBe('2026-03-03T12:00:00.000Z')
+    expect(retentionCutoff(24, new Date('2026-09-20T00:00:00Z')).toISOString()).toBe(
+      '2024-09-20T00:00:00.000Z',
+    )
+    expect(retentionCutoff(1, new Date('2026-03-31T12:00:00Z')).toISOString()).toBe(
+      '2026-03-03T12:00:00.000Z',
+    )
   })
 
   it('deletes download and registration records older than the period and keeps newer ones', async () => {
@@ -176,7 +215,12 @@ describe('data retention', () => {
         await payload.create({
           collection: 'media',
           data: { alt: 'Retention test file', access: 'gated' },
-          file: { data: Buffer.from('country,value\nLKA,1\n'), name: 'retention.csv', mimetype: 'text/csv', size: 20 },
+          file: {
+            data: Buffer.from('country,value\nLKA,1\n'),
+            name: 'retention.csv',
+            mimetype: 'text/csv',
+            size: 20,
+          },
         })
       ).id
     const consent = { consentText: 'I agree', consentVersion: 'test' }
@@ -208,7 +252,11 @@ describe('data retention', () => {
 
 describe('unified search index', () => {
   it('indexes the published use case with its path, type and taxonomy names', async () => {
-    const res = await payload.find({ collection: 'search', where: { title: { like: 'Paddy' } }, depth: 0 })
+    const res = await payload.find({
+      collection: 'search',
+      where: { title: { like: 'Paddy' } },
+      depth: 0,
+    })
     expect(res.totalDocs).toBe(1)
     const hit = res.docs[0] as Search
     expect(hit.path).toBe('/use-cases/paddy-pest-advisory-by-sms')
@@ -228,12 +276,20 @@ describe('unified search index', () => {
   })
 
   it('does not index drafts', async () => {
-    const res = await payload.find({ collection: 'search', where: { title: { like: 'Draft only' } } })
+    const res = await payload.find({
+      collection: 'search',
+      where: { title: { like: 'Draft only' } },
+    })
     expect(res.totalDocs).toBe(0)
   })
 
   it('removes the entry when the use case is unpublished', async () => {
-    const doc = (await payload.find({ collection: 'use-cases', where: { slug: { equals: 'paddy-pest-advisory-by-sms' } } })).docs[0]
+    const doc = (
+      await payload.find({
+        collection: 'use-cases',
+        where: { slug: { equals: 'paddy-pest-advisory-by-sms' } },
+      })
+    ).docs[0]
     await payload.update({ collection: 'use-cases', id: doc.id, data: { _status: 'draft' } })
     const gone = await payload.find({ collection: 'search', where: { title: { like: 'Paddy' } } })
     expect(gone.totalDocs).toBe(0)
@@ -241,5 +297,155 @@ describe('unified search index', () => {
     await payload.update({ collection: 'use-cases', id: doc.id, data: { _status: 'published' } })
     const back = await payload.find({ collection: 'search', where: { title: { like: 'Paddy' } } })
     expect(back.totalDocs).toBe(1)
+  })
+})
+
+describe('ranked search', () => {
+  it('finds the use case, counts it by type, and suggests a spelling for a typo', async () => {
+    const hit = await runSearch(payload, 'paddy pest')
+    expect(hit.total).toBe(1)
+    expect(hit.counts['use-cases']).toBe(1)
+    const typo = await runSearch(payload, 'agricultre')
+    expect(typo.total).toBe(0)
+    expect(typo.suggestion).toBe('agriculture')
+  })
+})
+
+describe('archive (trash)', () => {
+  it('removes an archived item from public listings and search, and restoring brings it back', async () => {
+    const doc = (
+      await payload.find({
+        collection: 'use-cases',
+        where: { slug: { equals: 'paddy-pest-advisory-by-sms' } },
+      })
+    ).docs[0]
+    await payload.update({
+      collection: 'use-cases',
+      id: doc.id,
+      data: { deletedAt: new Date().toISOString() },
+      trash: true,
+    })
+    expect(
+      (await listCollection<UseCase>(payload, 'use-cases', {}, useCaseFilters)).totalDocs,
+    ).toBe(0)
+    expect((await runSearch(payload, 'paddy')).total).toBe(0)
+
+    await payload.update({
+      collection: 'use-cases',
+      id: doc.id,
+      data: { deletedAt: null },
+      trash: true,
+    })
+    expect(
+      (await listCollection<UseCase>(payload, 'use-cases', {}, useCaseFilters)).totalDocs,
+    ).toBe(1)
+  })
+})
+
+describe('event join links', () => {
+  it('are hidden from anonymous API readers but returned to a confirmed registrant', async () => {
+    const event = await payload.create({
+      collection: 'events',
+      data: {
+        title: 'Join link test webinar',
+        summary: 'Test event.',
+        startDate: new Date(Date.now() + 7 * 86_400_000).toISOString(),
+        format: 'online',
+        onlineUrl: 'https://meet.example.org/secret-room',
+        registration: { mode: 'form' },
+        _status: 'published',
+      },
+    })
+    const anon = await payload.find({
+      collection: 'events',
+      where: { id: { equals: event.id } },
+      overrideAccess: false,
+    })
+    expect(anon.docs[0]?.title).toBe('Join link test webinar')
+    expect(anon.docs[0]?.onlineUrl).toBeUndefined()
+
+    const reg = await submitRegistration(
+      payload,
+      { name: 'Test Person', email: 'reg@example.org', eventId: String(event.id), consent: 'on' },
+      { ip: '203.0.113.9', userAgent: 'vitest' },
+    )
+    expect(reg.ok && reg.onlineUrl).toBe('https://meet.example.org/secret-room')
+  })
+})
+
+describe('gated downloads', () => {
+  let gatedFileId: number | string
+  afterAll(async () => {
+    // Remove the uploaded test file from disk as well as the database.
+    if (gatedFileId)
+      await payload
+        .delete({ collection: 'media', id: gatedFileId, overrideAccess: true })
+        .catch(() => null)
+  })
+
+  it('record the request with consent and return a signed link bound to the file', async () => {
+    const pdf = samplePdf('Gated test brief', ['Test'])
+    const file = await payload.create({
+      collection: 'media',
+      data: { alt: 'Gated test brief', access: 'gated' },
+      file: {
+        data: pdf,
+        name: 'gated-test.pdf',
+        mimetype: 'application/pdf',
+        size: pdf.byteLength,
+      },
+    })
+    gatedFileId = file.id
+    const res = await submitGate(
+      payload,
+      { email: 'reader@example.org', fileId: String(file.id), consent: 'on' },
+      { ip: '203.0.113.10', userAgent: 'vitest' },
+    )
+    expect(res.ok).toBe(true)
+    if (!res.ok) return
+    const token = new URL(res.url, 'http://x').searchParams.get('t')
+    expect(verifyGateToken(token, payload.secret)?.fileId).toBe(String(file.id))
+    expect(res.url).not.toContain('reader@example.org')
+
+    const records = await payload.find({
+      collection: 'download-requests',
+      where: { email: { equals: 'reader@example.org' } },
+      overrideAccess: true,
+    })
+    expect(records.totalDocs).toBe(1)
+    expect(records.docs[0].consentVersion).toBeTruthy()
+  })
+
+  it('refuses without consent and never reads outside the media directory', async () => {
+    const res = await submitGate(
+      payload,
+      { email: 'reader@example.org', fileId: '1' },
+      { ip: '203.0.113.11', userAgent: 'vitest' },
+    )
+    expect(res.ok).toBe(false)
+    expect(await readStoredFile('../package.json')).toBeNull()
+    expect(await readStoredFile('..\package.json')).toBeNull()
+  })
+
+  it('neutralises spreadsheet formulas in free-text fields before they reach CSV exports', async () => {
+    const file = { id: gatedFileId }
+    await submitGate(
+      payload,
+      {
+        email: 'csv@example.org',
+        fileId: String(file.id),
+        consent: 'on',
+        organisation: '=HYPERLINK("http://evil")',
+      },
+      { ip: '203.0.113.12', userAgent: 'vitest' },
+    )
+    const rec = (
+      await payload.find({
+        collection: 'download-requests',
+        where: { email: { equals: 'csv@example.org' } },
+        overrideAccess: true,
+      })
+    ).docs[0]
+    expect(rec.organisation?.startsWith("'=")).toBe(true)
   })
 })

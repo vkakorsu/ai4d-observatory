@@ -57,7 +57,8 @@ export const Media: CollectionConfig = {
   admin: {
     group: 'Administration',
     defaultColumns: ['filename', 'alt', 'access', 'updatedAt'],
-    description: 'Images, PDFs and other files. Gated files require an email address before download.',
+    description:
+      'Images, PDFs and other files. Gated files require an email address before download.',
   },
   access: {
     /**
@@ -76,7 +77,8 @@ export const Media: CollectionConfig = {
     delete: isEditor,
   },
   upload: {
-    staticDir: 'media',
+    // MEDIA_DIR moves uploads elsewhere, for example a mounted volume, or a temporary folder in tests.
+    staticDir: process.env.MEDIA_DIR || 'media',
     mimeTypes: [
       'image/*',
       'application/pdf',
@@ -87,11 +89,34 @@ export const Media: CollectionConfig = {
       'application/zip',
       'application/json',
     ],
+    /*
+     * Renditions are generated once, at upload, as WebP (Section 3.1.5 c). Pages link to the rendition that fits,
+     * so no on-demand image optimiser has to run on the Client's server. AVIF is deliberately not used while the
+     * libheif advisory of August 2026 (GHSA-2xp9-vwfh-vxw4) is open upstream.
+     */
     imageSizes: [
-      { name: 'thumb', width: 320, height: 200, position: 'centre' },
-      { name: 'card', width: 720, height: undefined },
-      { name: 'wide', width: 1440, height: undefined },
+      {
+        name: 'thumb',
+        width: 320,
+        height: 200,
+        position: 'centre',
+        formatOptions: { format: 'webp', options: { quality: 78 } },
+      },
+      {
+        name: 'card',
+        width: 720,
+        height: undefined,
+        formatOptions: { format: 'webp', options: { quality: 78 } },
+      },
+      {
+        name: 'wide',
+        width: 1440,
+        height: undefined,
+        formatOptions: { format: 'webp', options: { quality: 80 } },
+      },
     ],
+    // Uploaded originals larger than this are scaled down on save, so a 12 MB phone photo never reaches visitors.
+    resizeOptions: { width: 2400, withoutEnlargement: true },
     adminThumbnail: 'thumb',
     focalPoint: true,
   },
@@ -100,7 +125,10 @@ export const Media: CollectionConfig = {
       name: 'alt',
       type: 'text',
       required: true,
-      admin: { description: 'Describe the image for screen reader users. For documents, use the document title.' },
+      admin: {
+        description:
+          'Describe the image for screen reader users. For documents, use the document title.',
+      },
     },
     { name: 'caption', type: 'text' },
     { name: 'credit', type: 'text' },
@@ -138,7 +166,8 @@ export const DownloadRequests: CollectionConfig = {
     group: 'Records',
     useAsTitle: 'email',
     defaultColumns: ['email', 'file', 'createdAt', 'organisation', 'country'],
-    description: 'Records created by the email-gated download form. Export as CSV from the list view.',
+    description:
+      'Records created by the email-gated download form. Export as CSV from the list view.',
   },
   access: {
     read: isEditor,
@@ -155,7 +184,11 @@ export const DownloadRequests: CollectionConfig = {
     { name: 'country', type: 'text' },
     { name: 'consentText', type: 'textarea', required: true },
     { name: 'consentVersion', type: 'text', required: true },
-    { name: 'ipHash', type: 'text', admin: { description: 'One-way hash for abuse detection. Not reversible.' } },
+    {
+      name: 'ipHash',
+      type: 'text',
+      admin: { description: 'One-way hash for abuse detection. Not reversible.' },
+    },
     { name: 'userAgent', type: 'text' },
   ],
   timestamps: true,
@@ -168,7 +201,8 @@ export const Subscribers: CollectionConfig = {
     group: 'Records',
     useAsTitle: 'email',
     defaultColumns: ['email', 'status', 'provider', 'createdAt'],
-    description: 'Newsletter subscriptions. Also synced to the configured email provider. Export as CSV from the list view.',
+    description:
+      'Newsletter subscriptions. Also synced to the configured email provider. Export as CSV from the list view.',
   },
   access: {
     read: isEditor,
@@ -192,7 +226,11 @@ export const Subscribers: CollectionConfig = {
         { label: 'Unsubscribed', value: 'unsubscribed' },
       ],
     },
-    { name: 'provider', type: 'text', admin: { description: 'Which provider adapter handled this subscription.' } },
+    {
+      name: 'provider',
+      type: 'text',
+      admin: { description: 'Which provider adapter handled this subscription.' },
+    },
     { name: 'providerId', type: 'text' },
     { name: 'consentText', type: 'textarea', required: true },
     { name: 'consentVersion', type: 'text', required: true },
@@ -208,7 +246,8 @@ export const EventRegistrations: CollectionConfig = {
     group: 'Records',
     useAsTitle: 'email',
     defaultColumns: ['email', 'name', 'event', 'createdAt'],
-    description: 'Registrations submitted through on-site event forms. Export as CSV from the list view.',
+    description:
+      'Registrations submitted through on-site event forms. Export as CSV from the list view.',
   },
   access: {
     read: isEditor,

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
+import Link from '@/components/SmartLink'
 import { notFound } from 'next/navigation'
 import { DetailPage } from '@/components/DetailPage'
 import { RichText } from '@/components/RichText'
@@ -28,7 +28,12 @@ const LICENCES: Record<string, { label: string; url?: string }> = {
 
 export async function generateStaticParams() {
   const payload = await getPayloadClient()
-  const res = await payload.find({ collection: 'datasets', limit: 500, depth: 0, where: { _status: { equals: 'published' } } })
+  const res = await payload.find({
+    collection: 'datasets',
+    limit: 500,
+    depth: 0,
+    where: { _status: { equals: 'published' } },
+  })
   return res.docs.map((d) => ({ slug: d.slug ?? '' })).filter((p) => p.slug)
 }
 
@@ -36,22 +41,36 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const doc = await findBySlug<Dataset>(await getPayloadClient(), 'datasets', slug, 1)
   if (!doc) return {}
-  return buildMetadata({ title: doc.title, description: doc.summary, path: `/datasets/${slug}`, seo: doc.seo })
+  return buildMetadata({
+    title: doc.title,
+    description: doc.summary,
+    path: `/datasets/${slug}`,
+    seo: doc.seo,
+  })
 }
 
 export default async function DatasetPage({ params }: Props) {
   const { slug } = await params
   const payload = await getPayloadClient()
-  const [doc, settings] = await Promise.all([findBySlug<Dataset>(payload, 'datasets', slug, 2), getSettings()])
+  const [doc, settings] = await Promise.all([
+    findBySlug<Dataset>(payload, 'datasets', slug, 2),
+    getSettings(),
+  ])
   if (!doc) notFound()
   const show = Boolean(settings.showPrototypeNotices)
-  const related = await relatedContent(payload, doc as unknown as Record<string, unknown>, { collection: 'datasets', id: doc.id })
+  const related = await relatedContent(payload, doc as unknown as Record<string, unknown>, {
+    collection: 'datasets',
+    id: doc.id,
+  })
   const licence = doc.licence ? LICENCES[doc.licence] : null
-  const indicators = Array.isArray(doc.indicators) ? doc.indicators.filter((i): i is Indicator => typeof i === 'object') : []
+  const indicators = Array.isArray(doc.indicators)
+    ? doc.indicators.filter((i): i is Indicator => typeof i === 'object')
+    : []
   const path = `/datasets/${slug}`
 
   return (
     <DetailPage
+      path={path}
       crumbs={[{ href: '/datasets', label: 'Datasets' }, { label: doc.title }]}
       type="Dataset"
       title={doc.title}
@@ -80,7 +99,12 @@ export default async function DatasetPage({ params }: Props) {
               <ul className="related-list">
                 {doc.accessLinks.map((l) => (
                   <li key={l.id ?? l.url}>
-                    <TrackLink href={l.url} event="dataset_access" data={{ resource: doc.title, label: l.label }} rel="noopener noreferrer">
+                    <TrackLink
+                      href={l.url}
+                      event="dataset_access"
+                      data={{ resource: doc.title, label: l.label }}
+                      rel="noopener noreferrer"
+                    >
                       {l.label} <Icon name="external" size={12} />
                     </TrackLink>
                   </li>

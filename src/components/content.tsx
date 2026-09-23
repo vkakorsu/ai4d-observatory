@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from '@/components/SmartLink'
 import type { Media } from '@/payload-types'
 import { Icon } from './Icon'
 import { GateForm } from './forms/GateForm'
@@ -6,7 +6,7 @@ import { TrackLink } from './TrackLink'
 import { CONTENT_TYPES, pathFor, type ContentTypeKey } from '@/lib/content-types'
 import { typeLabelFor } from './listing'
 import type { MetaItem } from './ui'
-import { formatDate } from '@/lib/format'
+import { formatDate, formatFileSize } from '@/lib/format'
 
 /* Components used by detail pages. */
 
@@ -25,14 +25,17 @@ export function DownloadBox({
   label?: string
 }) {
   if (!file || typeof file !== 'object' || !file.url) return null
-  const sizeLabel = file.filesize ? `${(file.filesize / 1024 / 1024).toFixed(1)} MB` : null
+  const sizeLabel = formatFileSize(file.filesize)
   if (file.access === 'gated') {
     return (
       <GateForm
         fileId={String(file.id)}
         resourceTitle={resourceTitle}
         resourceUrl={resourceUrl}
-        purpose={file.gatePurpose ?? 'We ask for your email address so we can tell you when this resource is updated.'}
+        purpose={
+          file.gatePurpose ??
+          'We ask for your email address so we can tell you when this resource is updated.'
+        }
         consentText={consentText}
         filename={file.filename}
         size={file.filesize}
@@ -48,8 +51,15 @@ export function DownloadBox({
         {file.filename}
         {sizeLabel ? ` · ${sizeLabel}` : ''} · open access
       </p>
-      <TrackLink className="btn btn--primary" href={file.url} event="download" data={{ resource: resourceTitle, gated: false }} download>
-        <Icon name="download" size={16} /> Download {file.mimeType === 'application/pdf' ? 'PDF' : 'file'}
+      <TrackLink
+        className="btn btn--primary"
+        href={file.url}
+        event="download"
+        data={{ resource: resourceTitle, gated: false }}
+        download
+      >
+        <Icon name="download" size={16} /> Download{' '}
+        {file.mimeType === 'application/pdf' ? 'PDF' : 'file'}
       </TrackLink>
     </div>
   )
@@ -71,7 +81,12 @@ export function RelatedList({
           const def = CONTENT_TYPES[collection]
           const d = doc as Record<string, unknown> & { id: string | number; slug?: string | null }
           const title = String(d[def.titleField] ?? '')
-          const date = typeof d.publishedAt === 'string' ? d.publishedAt : typeof d.startDate === 'string' ? d.startDate : ''
+          const date =
+            typeof d.publishedAt === 'string'
+              ? d.publishedAt
+              : typeof d.startDate === 'string'
+                ? d.startDate
+                : ''
           return (
             <li key={`${collection}-${d.id}`}>
               <span className="item__type">
@@ -87,11 +102,19 @@ export function RelatedList({
   )
 }
 
-type PersonLike = { id: string | number; name: string; slug?: string | null; role?: string | null; organisation?: unknown }
+type PersonLike = {
+  id: string | number
+  name: string
+  slug?: string | null
+  role?: string | null
+  organisation?: unknown
+}
 type OrgLike = { id: string | number; name: string; slug?: string | null; acronym?: string | null }
 
 export function PeopleLinks({ people }: { people: unknown }) {
-  const list = Array.isArray(people) ? (people.filter((p) => p && typeof p === 'object') as PersonLike[]) : []
+  const list = Array.isArray(people)
+    ? (people.filter((p) => p && typeof p === 'object') as PersonLike[])
+    : []
   if (!list.length) return null
   return (
     <ul className="related-list">
@@ -106,7 +129,9 @@ export function PeopleLinks({ people }: { people: unknown }) {
 }
 
 export function OrgLinks({ orgs }: { orgs: unknown }) {
-  const list = Array.isArray(orgs) ? (orgs.filter((o) => o && typeof o === 'object') as OrgLike[]) : []
+  const list = Array.isArray(orgs)
+    ? (orgs.filter((o) => o && typeof o === 'object') as OrgLike[])
+    : []
   if (!list.length) return null
   return (
     <ul className="related-list">
@@ -123,7 +148,9 @@ export function OrgLinks({ orgs }: { orgs: unknown }) {
 }
 
 export function LinkList({ links }: { links: unknown }) {
-  const list = Array.isArray(links) ? (links as Array<{ label: string; url: string; id?: string }>) : []
+  const list = Array.isArray(links)
+    ? (links as Array<{ label: string; url: string; id?: string }>)
+    : []
   if (!list.length) return null
   return (
     <ul className="related-list">

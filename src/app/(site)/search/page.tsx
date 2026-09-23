@@ -1,20 +1,20 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
-import type { PaginatedDocs, Where } from 'payload'
-import type { Search } from '@/payload-types'
+import Link from '@/components/SmartLink'
 import type { PageProps } from '@/components/ListingPage'
 import { Pagination, ResultsHead } from '@/components/listing'
 import { Breadcrumbs, Empty, PageHeader } from '@/components/ui'
 import { Icon } from '@/components/Icon'
 import { getPayloadClient } from '@/lib/payload'
 import { getSettings } from '@/lib/site'
+import { runSearch } from '@/lib/search'
 import { CONTENT_TYPES, contentTypeList, type ContentTypeKey } from '@/lib/content-types'
 import { getPage, getParam, withParam } from '@/lib/queries'
 import { formatDate } from '@/lib/format'
 
 export const metadata: Metadata = {
   title: 'Search',
-  description: 'Search every use case, publication, dataset, person, organisation, event, learning resource and opportunity on the Asia AI4D Observatory.',
+  description:
+    'Search every use case, publication, dataset, person, organisation, event, learning resource and opportunity on the Asia AI4D Observatory.',
   robots: { index: false, follow: true },
 }
 
@@ -34,26 +34,20 @@ export default async function SearchPage({ searchParams }: PageProps) {
   const settings = await getSettings()
   const show = Boolean(settings.showPrototypeNotices)
 
-  let results: PaginatedDocs<Search> | null = null
-  let counts: Array<{ type: ContentTypeKey; n: number }> = []
-  if (q) {
-    const terms = q.split(/\s+/).filter(Boolean).slice(0, 6)
-    const textMatch: Where = {
-      and: terms.map((t): Where => ({ or: [{ title: { like: t } }, { excerpt: { like: t } }, { keywords: { like: t } }] })),
-    }
-    const where: Where = type ? { and: [textMatch, { 'doc.relationTo': { equals: type } }] } : textMatch
-    ;[results, counts] = await Promise.all([
-      payload.find({ collection: 'search', where, sort: '-priority', limit: PAGE, page, depth: 0 }),
-      Promise.all(
-        contentTypeList
-          .filter((t) => t.inSearch)
-          .map(async (t) => ({
-            type: t.collection,
-            n: (await payload.count({ collection: 'search', where: { and: [textMatch, { 'doc.relationTo': { equals: t.collection } }] } })).totalDocs,
-          })),
-      ).then((arr) => arr.filter((x) => x.n > 0)),
-    ])
-  }
+  const outcome = q ? await runSearch(payload, q, { type, page, perPage: PAGE }) : null
+  const results = outcome
+    ? {
+        docs: outcome.results,
+        totalDocs: outcome.total,
+        totalPages: outcome.totalPages,
+        page: outcome.page,
+      }
+    : null
+  const counts: Array<{ type: ContentTypeKey; n: number }> = outcome
+    ? contentTypeList
+        .filter((t) => t.inSearch && outcome.counts[t.collection])
+        .map((t) => ({ type: t.collection, n: outcome.counts[t.collection] }))
+    : []
 
   return (
     <div className="container">
@@ -63,7 +57,14 @@ export default async function SearchPage({ searchParams }: PageProps) {
         <label htmlFor="q" className="visually-hidden">
           Search
         </label>
-        <input id="q" type="search" name="q" defaultValue={q} placeholder="Try a country, a sector, an enabler or a title" autoFocus={!q} />
+        <input
+          id="q"
+          type="search"
+          name="q"
+          defaultValue={q}
+          placeholder="Try a country, a sector, an enabler or a title"
+          autoFocus={!q}
+        />
         {type && <input type="hidden" name="type" value={type} />}
         <button className="btn btn--primary" type="submit">
           <Icon name="search" size={16} /> Search
@@ -90,19 +91,36 @@ export default async function SearchPage({ searchParams }: PageProps) {
           <aside className="rail" aria-label="Filter by type">
             <div className="filters">
               <p className="filters__group" style={{ margin: 0 }}>
-                <span style={{ fontSize: 'var(--step--1)', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--ink-56)' }}>
+                <span
+                  style={{
+                    fontSize: 'var(--step--1)',
+                    fontWeight: 600,
+                    letterSpacing: '0.04em',
+                    textTransform: 'uppercase',
+                    color: 'var(--ink-56)',
+                  }}
+                >
                   Type
                 </span>
               </p>
               <ul className="related-list" style={{ marginTop: 'var(--s-2)' }}>
                 <li>
-                  <Link href={`/search${withParam(sp, 'type', undefined)}`} aria-current={!type ? 'page' : undefined} style={{ fontWeight: !type ? 700 : 500 }}>
-                    All results <span className="mono muted tiny">{counts.reduce((a, b) => a + b.n, 0)}</span>
+                  <Link
+                    href={`/search${withParam(sp, 'type', undefined)}`}
+                    aria-current={!type ? 'page' : undefined}
+                    style={{ fontWeight: !type ? 700 : 500 }}
+                  >
+                    All results{' '}
+                    <span className="mono muted tiny">{counts.reduce((a, b) => a + b.n, 0)}</span>
                   </Link>
                 </li>
                 {counts.map((c) => (
                   <li key={c.type}>
-                    <Link href={`/search${withParam(sp, 'type', c.type)}`} aria-current={type === c.type ? 'page' : undefined} style={{ fontWeight: type === c.type ? 700 : 500 }}>
+                    <Link
+                      href={`/search${withParam(sp, 'type', c.type)}`}
+                      aria-current={type === c.type ? 'page' : undefined}
+                      style={{ fontWeight: type === c.type ? 700 : 500 }}
+                    >
                       {CONTENT_TYPES[c.type].plural} <span className="mono muted tiny">{c.n}</span>
                     </Link>
                   </li>
@@ -114,9 +132,19 @@ export default async function SearchPage({ searchParams }: PageProps) {
             <ResultsHead total={results.totalDocs} noun="result" />
             {results.docs.length === 0 ? (
               <Empty title="No results">
+                {outcome?.suggestion && (
+                  <p>
+                    Did you mean{' '}
+                    <Link href={`/search?q=${encodeURIComponent(outcome.suggestion)}`}>
+                      <strong>{outcome.suggestion}</strong>
+                    </Link>
+                    ?
+                  </p>
+                )}
                 <p>
-                  Check the spelling, try a broader word, or browse <Link href="/use-cases">use cases</Link>, <Link href="/publications">publications</Link>{' '}
-                  or <Link href="/data">data</Link>.
+                  Check the spelling, try a broader word, or browse{' '}
+                  <Link href="/use-cases">use cases</Link>,{' '}
+                  <Link href="/publications">publications</Link> or <Link href="/data">data</Link>.
                 </p>
               </Empty>
             ) : (
@@ -127,8 +155,11 @@ export default async function SearchPage({ searchParams }: PageProps) {
                     <li key={r.id}>
                       <article className="item result">
                         <div className="item__type">
-                          <span className="dot" aria-hidden="true" /> {r.typeLabel ?? CONTENT_TYPES[rel.relationTo]?.label}
-                          {r.publishedAt && <time dateTime={r.publishedAt}>{formatDate(r.publishedAt)}</time>}
+                          <span className="dot" aria-hidden="true" />{' '}
+                          {r.typeLabel ?? CONTENT_TYPES[rel.relationTo]?.label}
+                          {r.publishedAt && (
+                            <time dateTime={r.publishedAt}>{formatDate(r.publishedAt)}</time>
+                          )}
                           {r.countries && <span>· {r.countries}</span>}
                         </div>
                         <h3 className="item__title">
@@ -148,11 +179,17 @@ export default async function SearchPage({ searchParams }: PageProps) {
                 })}
               </ul>
             )}
-            <Pagination page={results.page ?? page} totalPages={results.totalPages} sp={sp} action="/search" />
+            <Pagination
+              page={results.page ?? page}
+              totalPages={results.totalPages}
+              sp={sp}
+              action="/search"
+            />
             {show && (
               <p className="tiny muted" style={{ marginTop: 'var(--s-5)' }}>
-                Search runs on the CMS search index. In production on PostgreSQL the same index gains full-text ranking with a
-                generated tsvector column. No third-party search service is required.
+                Search runs on the CMS search index in the Observatory&rsquo;s own database, ranked
+                by where the words appear (title, then taxonomy, then summary), with spelling
+                suggestions. No third-party search service is required.
               </p>
             )}
           </div>

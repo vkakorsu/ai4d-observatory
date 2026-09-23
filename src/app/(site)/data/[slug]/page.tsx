@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
+import Link from '@/components/SmartLink'
 import { notFound } from 'next/navigation'
 import { Breadcrumbs, JsonLd, MetaList, PageHeader, PendingBadge, Section } from '@/components/ui'
 import { BarChart, DataTable, RegionMap, type MapRow } from '@/components/data-viz'
@@ -25,18 +25,29 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const doc = await findBySlug<Indicator>(await getPayloadClient(), 'indicators', slug, 0)
   if (!doc) return {}
-  return buildMetadata({ title: `${doc.name}. Regional map and data`, description: doc.definition, path: `/data/${slug}` })
+  return buildMetadata({
+    title: `${doc.name}. Regional map and data`,
+    description: doc.definition,
+    path: `/data/${slug}`,
+  })
 }
 
 export default async function IndicatorPage({ params, searchParams }: Props) {
   const { slug } = await params
   const sp = await searchParams
   const payload = await getPayloadClient()
-  const [doc, settings] = await Promise.all([findBySlug<Indicator>(payload, 'indicators', slug, 1), getSettings()])
+  const [doc, settings] = await Promise.all([
+    findBySlug<Indicator>(payload, 'indicators', slug, 1),
+    getSettings(),
+  ])
   if (!doc) notFound()
   const show = Boolean(settings.showPrototypeNotices)
   const requested = Number(getParam(sp, 'year'))
-  const data = await indicatorRows(payload, doc.id, Number.isFinite(requested) && requested > 0 ? requested : undefined)
+  const data = await indicatorRows(
+    payload,
+    doc.id,
+    Number.isFinite(requested) && requested > 0 ? requested : undefined,
+  )
   const rows = data.rows as MapRow[]
   const path = `/data/${slug}`
   const csv = `${path}/csv${data.year ? `?year=${data.year}` : ''}`
@@ -79,14 +90,18 @@ export default async function IndicatorPage({ params, searchParams }: Props) {
       />
       {show && doc.provenance === 'sample' && (
         <p className="small">
-          <PendingBadge>Illustrative values</PendingBadge> Values shown are placeholders so the map, chart and table can be reviewed.
+          <PendingBadge>Illustrative values</PendingBadge> Values shown are placeholders so the map,
+          chart and table can be reviewed.
         </p>
       )}
 
       {data.rows.every((r) => r.value === null) ? (
         <div className="empty">
           <h2>No values yet</h2>
-          <p>This indicator has no values for the selected year. Editors add values as indicator value records in the CMS.</p>
+          <p>
+            This indicator has no values for the selected year. Editors add values as indicator
+            value records in the CMS.
+          </p>
         </div>
       ) : (
         <>
@@ -99,11 +114,27 @@ export default async function IndicatorPage({ params, searchParams }: Props) {
               <MetaList
                 items={[
                   { label: 'Unit', value: doc.unit },
-                  { label: 'Direction', value: doc.higherIsBetter === false ? 'Lower is better' : 'Higher is better' },
-                  typeof doc.min === 'number' && typeof doc.max === 'number' && { label: 'Range', value: `${doc.min} to ${doc.max}` },
-                  { label: 'Source', value: doc.sourceUrl ? <a href={doc.sourceUrl}>{doc.source}</a> : doc.source },
-                  dataset && { label: 'Dataset', value: <Link href={`/datasets/${dataset.slug}`}>{dataset.title}</Link> },
-                  doc.methodology && { label: 'Methodology', value: <span className="small">{doc.methodology}</span> },
+                  {
+                    label: 'Direction',
+                    value: doc.higherIsBetter === false ? 'Lower is better' : 'Higher is better',
+                  },
+                  typeof doc.min === 'number' &&
+                    typeof doc.max === 'number' && {
+                      label: 'Range',
+                      value: `${doc.min} to ${doc.max}`,
+                    },
+                  {
+                    label: 'Source',
+                    value: doc.sourceUrl ? <a href={doc.sourceUrl}>{doc.source}</a> : doc.source,
+                  },
+                  dataset && {
+                    label: 'Dataset',
+                    value: <Link href={`/datasets/${dataset.slug}`}>{dataset.title}</Link>,
+                  },
+                  doc.methodology && {
+                    label: 'Methodology',
+                    value: <span className="small">{doc.methodology}</span>,
+                  },
                   { label: 'Years available', value: data.years.join(', ') },
                 ]}
               />

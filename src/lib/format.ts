@@ -1,8 +1,16 @@
-export const formatDate = (value: string | Date | null | undefined, opts: Intl.DateTimeFormatOptions = {}) => {
+export const formatDate = (
+  value: string | Date | null | undefined,
+  opts: Intl.DateTimeFormatOptions = {},
+) => {
   if (!value) return ''
   const d = typeof value === 'string' ? new Date(value) : value
   if (Number.isNaN(d.getTime())) return ''
-  return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric', ...opts }).format(d)
+  return new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    ...opts,
+  }).format(d)
 }
 
 export const formatDateRange = (start?: string | null, end?: string | null) => {
@@ -17,7 +25,8 @@ export const formatDateRange = (start?: string | null, end?: string | null) => {
   return `${formatDate(s)} to ${formatDate(e)}`
 }
 
-export const isPast = (date?: string | null) => (date ? new Date(date).getTime() < Date.now() : false)
+export const isPast = (date?: string | null) =>
+  date ? new Date(date).getTime() < Date.now() : false
 
 export const daysUntil = (date?: string | null) => {
   if (!date) return null
@@ -27,9 +36,20 @@ export const daysUntil = (date?: string | null) => {
 
 export const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`
 
-export const siteUrl = () => (process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000').replace(/\/$/, '')
+export const siteUrl = () =>
+  (process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000').replace(/\/$/, '')
 
-export const absoluteUrl = (path: string) => `${siteUrl()}${path.startsWith('/') ? path : `/${path}`}`
+/** Absolute URL for a site path. Already-absolute URLs (for example media URLs built from serverURL) pass through. */
+export const absoluteUrl = (path: string) =>
+  /^https?:\/\//i.test(path) ? path : `${siteUrl()}${path.startsWith('/') ? path : `/${path}`}`
+
+/** Human file size. 0.4 MB files read as "410 KB", not "0.4 MB" or "0.0 MB". */
+export const formatFileSize = (bytes?: number | null): string | null => {
+  if (!bytes || bytes <= 0) return null
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`
+}
 
 /** Convert a YouTube or Vimeo page URL into a privacy-friendly embed URL. Anything else is rendered as a link. */
 export const embedUrl = (url: string): string | null => {

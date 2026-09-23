@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
+import Link from '@/components/SmartLink'
 import { ListingPage, type PageProps } from '@/components/ListingPage'
 import { Item } from '@/components/listing'
 import { Icon } from '@/components/Icon'
@@ -9,7 +9,8 @@ import { getParam } from '@/lib/queries'
 
 export const metadata: Metadata = {
   title: 'Opportunities',
-  description: 'Fellowships, grants, calls for papers, programmes, jobs and competitions relevant to responsible AI in South and Southeast Asia.',
+  description:
+    'Fellowships, grants, calls for papers, programmes, jobs and competitions relevant to responsible AI in South and Southeast Asia.',
   alternates: { types: { 'application/rss+xml': '/feed/opportunities.xml' } },
 }
 
@@ -28,7 +29,17 @@ export default async function OpportunitiesPage({ searchParams }: PageProps) {
       lede="Funding, fellowships, calls and roles from the Observatory, its partners and the wider AI4D network. Deadlines are shown in the organiser’s stated date. Always confirm on the organiser’s page."
       noun="opportunity"
       sort={showClosed ? '-deadline' : 'deadline'}
-      extraWhere={showClosed ? undefined : { or: [{ rolling: { equals: true } }, { deadline: { greater_than_equal: today } }, { deadline: { exists: false } }] }}
+      extraWhere={
+        showClosed
+          ? undefined
+          : {
+              or: [
+                { rolling: { equals: true } },
+                { deadline: { greater_than_equal: today } },
+                { deadline: { exists: false } },
+              ],
+            }
+      }
       extraControls={showClosed ? <input type="hidden" name="closed" value="1" /> : undefined}
       intro={
         <nav className="tabs" aria-label="Open or all">
@@ -47,7 +58,10 @@ export default async function OpportunitiesPage({ searchParams }: PageProps) {
           showNotices={show}
           meta={
             <>
-              <Deadline deadline={typeof doc.deadline === 'string' ? doc.deadline : null} rolling={Boolean(doc.rolling)} />
+              <Deadline
+                deadline={typeof doc.deadline === 'string' ? doc.deadline : null}
+                rolling={Boolean(doc.rolling)}
+              />
               {typeof doc.provider === 'string' && (
                 <>
                   <span aria-hidden="true">·</span> <Icon name="people" size={14} /> {doc.provider}

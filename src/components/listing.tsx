@@ -1,10 +1,18 @@
-import Link from 'next/link'
+import Link from '@/components/SmartLink'
 import type { ReactNode } from 'react'
 import { Icon } from './Icon'
-import { ProvenanceBadge, TaxChips, TypeCover } from './ui'
+import { ProvenanceBadge, TaxChips } from './ui'
+import { isPlaceholderImage, MosaicCover, ReportCover } from './ArtCover'
 import { formatDate } from '@/lib/format'
 import { CONTENT_TYPES, pathFor, type ContentTypeKey } from '@/lib/content-types'
-import { activeFilterCount, getParam, getParamList, withParam, type FilterDef, type SearchParams } from '@/lib/queries'
+import {
+  activeFilterCount,
+  getParam,
+  getParamList,
+  withParam,
+  type FilterDef,
+  type SearchParams,
+} from '@/lib/queries'
 
 /* Listing building blocks. Filter rail, result rows, active filter chips, pagination. */
 
@@ -41,17 +49,44 @@ export function Item({
   const title = str(doc[def.titleField])
   const href = pathFor(collection, doc.slug ?? '')
   const type = typeLabelFor(collection, doc)
-  const img = (doc.cover ?? doc.image) as { url?: string; sizes?: { thumb?: { url?: string } }; alt?: string } | null
-  const thumb = img && typeof img === 'object' ? img.sizes?.thumb?.url || img.url : undefined
+  const img = (doc.cover ?? doc.image) as {
+    url?: string
+    sizes?: { card?: { url?: string }; thumb?: { url?: string } }
+    alt?: string
+    mimeType?: string
+    caption?: string
+    filename?: string
+  } | null
+  const real = img && typeof img === 'object' && !isPlaceholderImage(img) ? img : null
+  const portrait = collection === 'publications' || collection === 'datasets'
   const date = str(doc.publishedAt)
+  const seed = `${collection}:${doc.slug ?? doc.id}`
   return (
-    <article className={`item ${compact ? 'item--compact' : ''} ${cover ? 'item--with-cover' : ''}`}>
-      {cover &&
-        (thumb ? (
-          <img className="tcover" src={thumb} alt="" loading="lazy" width={120} height={160} style={{ objectFit: 'cover' }} />
-        ) : (
-          <TypeCover type={type} title={title} />
-        ))}
+    <article
+      className={`item ${compact ? 'item--compact' : ''} ${cover ? `item--with-cover ${portrait ? '' : 'item--cover-wide'}` : ''}`}
+    >
+      {cover && (
+        <Link
+          href={href}
+          className={`thumb ${portrait ? 'thumb--portrait' : 'thumb--wide'}`}
+          tabIndex={-1}
+          aria-hidden="true"
+        >
+          {real ? (
+            // eslint-disable-next-line @next/next/no-img-element -- WebP rendition generated at upload
+            <img src={real.sizes?.card?.url || real.url} alt="" loading="lazy" decoding="async" />
+          ) : portrait ? (
+            <ReportCover
+              seed={seed}
+              kind={collection === 'datasets' ? 'dataset' : str(doc.type)}
+              label={type}
+              title={title}
+            />
+          ) : (
+            <MosaicCover seed={seed} />
+          )}
+        </Link>
+      )}
       <div className="item__body">
         <div className="item__type">
           <span className="dot" aria-hidden="true" />
@@ -93,48 +128,60 @@ export function Filters({
   const active = activeFilterCount(sp, defs)
   const q = getParam(sp, 'q') ?? ''
   return (
-    <details className="filters" open>
-      <summary>
-        <span>
-          <Icon name="filter" size={16} /> Filters{active ? ` (${active})` : ''}
-        </span>
-      </summary>
-      <form className="filters__body" method="get" action={action} data-autosubmit>
-        <div className="filters__group">
-          <label htmlFor="f-q">{searchLabel}</label>
-          <input id="f-q" type="search" name="q" defaultValue={q} />
-        </div>
-        {extra}
-        {defs.map((d) => {
-          const opts = options[d.param] ?? []
-          if (!opts.length) return null
-          const current = getParamList(sp, d.param)
-          return (
-            <div className="filters__group" key={d.param}>
-              <label htmlFor={`f-${d.param}`}>{d.label}</label>
-              <select id={`f-${d.param}`} name={d.param} defaultValue={current[0] ?? ''}>
-                <option value="">All</option>
-                {opts.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )
-        })}
-        <div className="filters__actions">
-          <button className="btn btn--small" type="submit">
-            Apply
-          </button>
-          {(active > 0 || q) && (
-            <Link className="btn btn--small btn--ghost" href={action}>
-              Clear all
-            </Link>
-          )}
-        </div>
-      </form>
-    </details>
+    <>
+      {/* Collapsed on phones so results come first; opened before first paint on wider screens, and always open while a filter is active. */}
+      <details
+        className="filters"
+        open={active > 0 || Boolean(q) || undefined}
+        suppressHydrationWarning
+      >
+        <summary>
+          <span>
+            <Icon name="filter" size={16} /> Filters{active ? ` (${active})` : ''}
+          </span>
+        </summary>
+        <form className="filters__body" method="get" action={action} data-autosubmit>
+          <div className="filters__group">
+            <label htmlFor="f-q">{searchLabel}</label>
+            <input id="f-q" type="search" name="q" defaultValue={q} />
+          </div>
+          {extra}
+          {defs.map((d) => {
+            const opts = options[d.param] ?? []
+            if (!opts.length) return null
+            const current = getParamList(sp, d.param)
+            return (
+              <div className="filters__group" key={d.param}>
+                <label htmlFor={`f-${d.param}`}>{d.label}</label>
+                <select id={`f-${d.param}`} name={d.param} defaultValue={current[0] ?? ''}>
+                  <option value="">All</option>
+                  {opts.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )
+          })}
+          <div className="filters__actions">
+            <button className="btn btn--small" type="submit">
+              Apply
+            </button>
+            {(active > 0 || q) && (
+              <Link className="btn btn--small btn--ghost" href={action}>
+                Clear all
+              </Link>
+            )}
+          </div>
+        </form>
+      </details>
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `(function(){var d=document.currentScript.previousElementSibling;if(d&&window.matchMedia&&matchMedia('(min-width: 64em)').matches)d.open=true})()`,
+        }}
+      />
+    </>
   )
 }
 
@@ -152,11 +199,16 @@ export function ActiveFilters({
 }) {
   const chips: Array<{ key: string; label: string; href: string }> = []
   const q = getParam(sp, 'q')
-  if (q) chips.push({ key: 'q', label: `“${q}”`, href: `${action}${withParam(sp, 'q', undefined)}` })
+  if (q)
+    chips.push({ key: 'q', label: `“${q}”`, href: `${action}${withParam(sp, 'q', undefined)}` })
   for (const d of defs) {
     for (const v of getParamList(sp, d.param)) {
       const label = options[d.param]?.find((o) => o.value === v)?.label ?? v
-      chips.push({ key: `${d.param}-${v}`, label: `${d.label}. ${label}`, href: `${action}${withParam(sp, d.param, undefined)}` })
+      chips.push({
+        key: `${d.param}-${v}`,
+        label: `${d.label}. ${label}`,
+        href: `${action}${withParam(sp, d.param, undefined)}`,
+      })
     }
   }
   if (!chips.length) return null
@@ -164,7 +216,12 @@ export function ActiveFilters({
     <div className="filter-chips" aria-label="Active filters">
       <span className="label">Filtering by</span>
       {chips.map((c) => (
-        <Link key={c.key} href={c.href} className="chip chip--remove" aria-label={`Remove filter ${c.label}`}>
+        <Link
+          key={c.key}
+          href={c.href}
+          className="chip chip--remove"
+          aria-label={`Remove filter ${c.label}`}
+        >
           {c.label}
         </Link>
       ))}
@@ -172,7 +229,15 @@ export function ActiveFilters({
   )
 }
 
-export function ResultsHead({ total, noun, children }: { total: number; noun: string; children?: ReactNode }) {
+export function ResultsHead({
+  total,
+  noun,
+  children,
+}: {
+  total: number
+  noun: string
+  children?: ReactNode
+}) {
   return (
     <div className="results-head">
       {/* A real heading so the h3 result titles below sit under an h2 (WCAG 1.3.1, heading order). */}
@@ -184,9 +249,20 @@ export function ResultsHead({ total, noun, children }: { total: number; noun: st
   )
 }
 
-export function Pagination({ page, totalPages, sp, action }: { page: number; totalPages: number; sp: SearchParams; action: string }) {
+export function Pagination({
+  page,
+  totalPages,
+  sp,
+  action,
+}: {
+  page: number
+  totalPages: number
+  sp: SearchParams
+  action: string
+}) {
   if (totalPages <= 1) return null
-  const link = (p: number) => `${action}${withParam(sp, 'page', p === 1 ? undefined : String(p), false)}`
+  const link = (p: number) =>
+    `${action}${withParam(sp, 'page', p === 1 ? undefined : String(p), false)}`
   const window = 2
   const pages: number[] = []
   for (let p = 1; p <= totalPages; p++) {

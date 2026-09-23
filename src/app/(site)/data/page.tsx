@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
+import Link from '@/components/SmartLink'
 import { Breadcrumbs, PageHeader, PendingBadge, Section } from '@/components/ui'
 import { RegionMap, type MapRow } from '@/components/data-viz'
 import { Icon } from '@/components/Icon'
@@ -14,7 +14,13 @@ export const metadata: Metadata = {
     'Interactive regional maps and country comparisons of responsible AI ecosystem indicators across South and Southeast Asia, each with a text summary, table and CSV export.',
 }
 
-export default async function DataPage() {
+export default async function DataPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const sp = await searchParams
+  const wanted = typeof sp.indicator === 'string' ? sp.indicator : undefined
   const payload = await getPayloadClient()
   const [settings, indicators, countries] = await Promise.all([
     getSettings(),
@@ -22,7 +28,10 @@ export default async function DataPage() {
     payload.find({ collection: 'countries', limit: 100, sort: 'name', depth: 0 }),
   ])
   const show = Boolean(settings.showPrototypeNotices)
-  const featured = indicators.docs.find((i) => i.featured) ?? indicators.docs[0]
+  const featured =
+    (wanted && indicators.docs.find((i) => i.slug === wanted)) ||
+    indicators.docs.find((i) => i.featured) ||
+    indicators.docs[0]
   const data = featured ? await indicatorRows(payload, featured.id) : null
   const byEnabler = new Map<string, typeof indicators.docs>()
   for (const ind of indicators.docs) {
@@ -41,8 +50,9 @@ export default async function DataPage() {
         aside={
           show && (
             <p className="small">
-              <PendingBadge>Illustrative values</PendingBadge> The indicators and values here are placeholders that show the mechanism.
-              Editors add real benchmarking data as indicator values in the CMS and the map, chart and table update without code.
+              <PendingBadge>Illustrative values</PendingBadge> The indicators and values here are
+              placeholders that show the mechanism. Editors add real benchmarking data as indicator
+              values in the CMS and the map, chart and table update without code.
             </p>
           )
         }
@@ -50,7 +60,37 @@ export default async function DataPage() {
 
       {featured && data && (
         <Section flush>
-          <RegionMap rows={data.rows as MapRow[]} indicator={featured} year={data.year} id="data-map" />
+          <form
+            className="indicator-select"
+            method="get"
+            action="/data#data-map"
+            data-autosubmit
+            style={{ marginBottom: 'var(--s-4)' }}
+          >
+            <div className="field">
+              <label htmlFor="indicator">Indicator</label>
+              <select id="indicator" name="indicator" defaultValue={featured.slug ?? ''}>
+                {Array.from(byEnabler.entries()).map(([enabler, list]) => (
+                  <optgroup key={enabler} label={enabler}>
+                    {list.map((ind) => (
+                      <option key={ind.id} value={ind.slug ?? ''}>
+                        {ind.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+            </div>
+            <button className="btn btn--small" type="submit">
+              Show
+            </button>
+          </form>
+          <RegionMap
+            rows={data.rows as MapRow[]}
+            indicator={featured}
+            year={data.year}
+            id="data-map"
+          />
           <p className="small" style={{ marginTop: 'var(--s-3)' }}>
             <Link className="btn" href={`/data/${featured.slug}`}>
               Explore {featured.name} <Icon name="arrow" size={16} />
@@ -72,7 +112,10 @@ export default async function DataPage() {
                     <div className="item__type">
                       <Icon name="data" size={14} /> {ind.unit} · {ind.source}
                     </div>
-                    <h4 className="item__title" style={{ fontFamily: 'var(--font-display)', fontWeight: 400 }}>
+                    <h4
+                      className="item__title"
+                      style={{ fontFamily: 'var(--font-display)', fontWeight: 400 }}
+                    >
                       <Link href={`/data/${ind.slug}`}>{ind.name}</Link>
                     </h4>
                     <p className="item__summary">{ind.definition}</p>
@@ -84,7 +127,11 @@ export default async function DataPage() {
         ))}
       </Section>
 
-      <Section title="Countries" id="countries" more={{ href: '/directory', label: 'People and organisations' }}>
+      <Section
+        title="Countries"
+        id="countries"
+        more={{ href: '/directory', label: 'People and organisations' }}
+      >
         <div className="hub-counts">
           {countries.docs.map((c) => (
             <Link key={c.id} href={`/countries/${c.slug}`}>
@@ -94,8 +141,9 @@ export default async function DataPage() {
         </div>
         {show && (
           <p className="tiny muted" style={{ marginTop: 'var(--s-3)' }}>
-            <PendingBadge>Pending confirmation</PendingBadge> Country coverage is a seed list for South and Southeast Asia. The Client
-            confirms the final list during requirements refinement. Adding or removing a country is one record in the CMS.
+            <PendingBadge>Pending confirmation</PendingBadge> Country coverage is a seed list for
+            South and Southeast Asia. The Client confirms the final list during requirements
+            refinement. Adding or removing a country is one record in the CMS.
           </p>
         )}
       </Section>

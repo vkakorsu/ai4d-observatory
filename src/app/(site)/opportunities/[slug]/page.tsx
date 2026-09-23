@@ -9,7 +9,7 @@ import { JsonLd, MetaList } from '@/components/ui'
 import { findBySlug, getPayloadClient } from '@/lib/payload'
 import { getSettings } from '@/lib/site'
 import { buildMetadata, jsonLd } from '@/lib/seo'
-import { absoluteUrl, formatDate } from '@/lib/format'
+import { absoluteUrl, formatDate, isPast } from '@/lib/format'
 import type { Opportunity } from '@/payload-types'
 
 type Props = { params: Promise<{ slug: string }> }
@@ -28,7 +28,12 @@ const TYPE: Record<string, string> = {
 
 export async function generateStaticParams() {
   const payload = await getPayloadClient()
-  const res = await payload.find({ collection: 'opportunities', limit: 500, depth: 0, where: { _status: { equals: 'published' } } })
+  const res = await payload.find({
+    collection: 'opportunities',
+    limit: 500,
+    depth: 0,
+    where: { _status: { equals: 'published' } },
+  })
   return res.docs.map((d) => ({ slug: d.slug ?? '' })).filter((p) => p.slug)
 }
 
@@ -36,20 +41,29 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const doc = await findBySlug<Opportunity>(await getPayloadClient(), 'opportunities', slug, 1)
   if (!doc) return {}
-  return buildMetadata({ title: doc.title, description: doc.summary, path: `/opportunities/${slug}`, seo: doc.seo })
+  return buildMetadata({
+    title: doc.title,
+    description: doc.summary,
+    path: `/opportunities/${slug}`,
+    seo: doc.seo,
+  })
 }
 
 export default async function OpportunityPage({ params }: Props) {
   const { slug } = await params
   const payload = await getPayloadClient()
-  const [doc, settings] = await Promise.all([findBySlug<Opportunity>(payload, 'opportunities', slug, 2), getSettings()])
+  const [doc, settings] = await Promise.all([
+    findBySlug<Opportunity>(payload, 'opportunities', slug, 2),
+    getSettings(),
+  ])
   if (!doc) notFound()
   const show = Boolean(settings.showPrototypeNotices)
-  const closed = Boolean(doc.deadline && !doc.rolling && new Date(doc.deadline).getTime() < Date.now())
+  const closed = Boolean(doc.deadline && !doc.rolling && isPast(doc.deadline))
   const path = `/opportunities/${slug}`
 
   return (
     <DetailPage
+      path={path}
       crumbs={[{ href: '/opportunities', label: 'Opportunities' }, { label: doc.title }]}
       type={TYPE[doc.opportunityType] ?? 'Opportunity'}
       title={doc.title}
@@ -74,7 +88,8 @@ export default async function OpportunityPage({ params }: Props) {
               data={{ resource: doc.title, closed }}
               rel="noopener noreferrer"
             >
-              {closed ? 'View on organiser’s site' : 'Go to application'} <Icon name="external" size={14} />
+              {closed ? 'View on organiser’s site' : 'Go to application'}{' '}
+              <Icon name="external" size={14} />
             </TrackLink>
           </div>
           <MetaList
@@ -82,16 +97,27 @@ export default async function OpportunityPage({ params }: Props) {
               { label: 'Provider', value: doc.provider },
               doc.deadline && { label: 'Deadline', value: formatDate(doc.deadline) },
               doc.rolling && { label: 'Deadline', value: 'Rolling' },
-              doc.eligibility && { label: 'Eligibility', value: <span className="small">{doc.eligibility}</span> },
+              doc.eligibility && {
+                label: 'Eligibility',
+                value: <span className="small">{doc.eligibility}</span>,
+              },
             ]}
           />
         </>
       }
     >
-      <JsonLd data={jsonLd.article({ title: doc.title, description: doc.summary, url: absoluteUrl(path), datePublished: doc.publishedAt })} />
+      <JsonLd
+        data={jsonLd.article({
+          title: doc.title,
+          description: doc.summary,
+          url: absoluteUrl(path),
+          datePublished: doc.publishedAt,
+        })}
+      />
       <RichText data={doc.description} serif />
       <p className="tiny muted" style={{ marginTop: 'var(--s-6)' }}>
-        The Observatory lists opportunities as a service to the network. Terms, eligibility and deadlines are set by the provider.
+        The Observatory lists opportunities as a service to the network. Terms, eligibility and
+        deadlines are set by the provider.
       </p>
     </DetailPage>
   )

@@ -88,7 +88,9 @@ a {
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 0.16em;
-  transition: text-decoration-thickness var(--dur) var(--ease), color var(--dur) var(--ease);
+  transition:
+    text-decoration-thickness var(--dur) var(--ease),
+    color var(--dur) var(--ease);
 }
 a:hover {
   text-decoration-thickness: 2px;
@@ -115,6 +117,13 @@ video {
   max-width: 100%;
   height: auto;
   display: block;
+}
+/* Icons keep their intrinsic size. max-width: 100% inside a shrink-to-fit flex parent (the menu button)
+   resolves circularly and collapsed the icon to a dot. */
+svg.icon {
+  flex: none;
+  max-width: none;
+  display: inline-block;
 }
 
 button,

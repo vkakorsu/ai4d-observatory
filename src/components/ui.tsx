@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from '@/components/SmartLink'
 import type { ReactNode } from 'react'
 import { Icon } from './Icon'
 import { absoluteUrl } from '@/lib/format'
@@ -23,7 +23,11 @@ export function Breadcrumbs({ items }: { items: Array<{ href?: string; label: st
           ))}
         </ol>
       </nav>
-      <JsonLd data={jsonLd.breadcrumbs(all.map((it) => ({ name: it.label, url: absoluteUrl(it.href ?? '/') })))} />
+      <JsonLd
+        data={jsonLd.breadcrumbs(
+          all.map((it) => ({ name: it.label, url: absoluteUrl(it.href ?? '/') })),
+        )}
+      />
     </>
   )
 }
@@ -67,7 +71,11 @@ export function Section({
   id?: string
 }) {
   return (
-    <section className={`section ${flush ? 'section--flush' : ''}`} id={id} aria-labelledby={id ? `${id}-h` : undefined}>
+    <section
+      className={`section ${flush ? 'section--flush' : ''}`}
+      id={id}
+      aria-labelledby={id ? `${id}-h` : undefined}
+    >
       {(title || more) && (
         <div className="section__head">
           {title && <h2 id={id ? `${id}-h` : undefined}>{title}</h2>}
@@ -84,7 +92,13 @@ export function Section({
 }
 
 /** Marks illustrative content while site setting `showPrototypeNotices` is on. */
-export function ProvenanceBadge({ provenance, show }: { provenance?: string | null; show: boolean }) {
+export function ProvenanceBadge({
+  provenance,
+  show,
+}: {
+  provenance?: string | null
+  show: boolean
+}) {
   if (!show || !provenance || provenance === 'client') return null
   if (provenance === 'public') return <span className="badge">Public record</span>
   return <span className="badge badge--sample">Sample content</span>
@@ -94,7 +108,13 @@ export function PendingBadge({ children = 'Pending client decision' }: { childre
   return <span className="badge badge--pending">{children}</span>
 }
 
-export function Notice({ children, icon = 'info' }: { children: ReactNode; icon?: 'info' | 'lock' }) {
+export function Notice({
+  children,
+  icon = 'info',
+}: {
+  children: ReactNode
+  icon?: 'info' | 'lock'
+}) {
   return (
     <div className="notice" role="note">
       <Icon name={icon} size={18} />
@@ -121,7 +141,9 @@ export function JsonLd({ data }: { data: unknown }) {
 type Term = { id: string | number; name: string; slug?: string | null }
 
 const termList = (v: unknown): Term[] =>
-  Array.isArray(v) ? v.filter((x): x is Term => Boolean(x) && typeof x === 'object' && 'name' in x) : []
+  Array.isArray(v)
+    ? v.filter((x): x is Term => Boolean(x) && typeof x === 'object' && 'name' in x)
+    : []
 
 /** Taxonomy chips linking to hub pages. Countries first, then enablers, then topics. */
 export function TaxChips({
@@ -139,10 +161,30 @@ export function TaxChips({
   const topics = termList(doc.topics ?? doc.expertise)
   const dims = termList(doc.raiDimensions)
   const chips: Array<{ key: string; label: string; href: string; cls: string }> = [
-    ...countries.map((t) => ({ key: `c-${t.id}`, label: t.name, href: base ? `${base}?country=${t.slug}` : `/countries/${t.slug}`, cls: 'chip chip--country' })),
-    ...enablers.map((t) => ({ key: `e-${t.id}`, label: t.name, href: base ? `${base}?enabler=${t.slug}` : `/enablers/${t.slug}`, cls: 'chip chip--enabler' })),
-    ...topics.map((t) => ({ key: `t-${t.id}`, label: t.name, href: base ? `${base}?topic=${t.slug}` : `/topics/${t.slug}`, cls: 'chip' })),
-    ...dims.map((t) => ({ key: `d-${t.id}`, label: t.name, href: base ? `${base}?dimension=${t.slug}` : `/dimensions/${t.slug}`, cls: 'chip' })),
+    ...countries.map((t) => ({
+      key: `c-${t.id}`,
+      label: t.name,
+      href: base ? `${base}?country=${t.slug}` : `/countries/${t.slug}`,
+      cls: 'chip chip--country',
+    })),
+    ...enablers.map((t) => ({
+      key: `e-${t.id}`,
+      label: t.name,
+      href: base ? `${base}?enabler=${t.slug}` : `/enablers/${t.slug}`,
+      cls: 'chip chip--enabler',
+    })),
+    ...topics.map((t) => ({
+      key: `t-${t.id}`,
+      label: t.name,
+      href: base ? `${base}?topic=${t.slug}` : `/topics/${t.slug}`,
+      cls: 'chip',
+    })),
+    ...dims.map((t) => ({
+      key: `d-${t.id}`,
+      label: t.name,
+      href: base ? `${base}?dimension=${t.slug}` : `/dimensions/${t.slug}`,
+      cls: 'chip',
+    })),
   ]
   const shown = limit ? chips.slice(0, limit) : chips
   const rest = chips.length - shown.length
@@ -187,17 +229,35 @@ export function ExternalLink({ href, children }: { href: string; children: React
 }
 
 /** Typographic cover for items without imagery. */
-export function TypeCover({ type, title, large = false }: { type: string; title: string; large?: boolean }) {
+export function TypeCover({
+  type,
+  title,
+  large = false,
+}: {
+  type: string
+  title: string
+  large?: boolean
+}) {
   const cls = `tcover tcover--${type.toLowerCase().replace(/\s+/g, '-')} ${large ? 'tcover--large' : ''}`
   return (
     <div className={cls} aria-hidden="true">
       <span>{type}</span>
-      <strong>{title.length > (large ? 90 : 48) ? `${title.slice(0, large ? 88 : 46).trim()}…` : title}</strong>
+      <strong>
+        {title.length > (large ? 90 : 48) ? `${title.slice(0, large ? 88 : 46).trim()}…` : title}
+      </strong>
     </div>
   )
 }
 
-export function Avatar({ name, photo, org = false }: { name: string; photo?: { url?: string | null; alt?: string | null } | null; org?: boolean }) {
+export function Avatar({
+  name,
+  photo,
+  org = false,
+}: {
+  name: string
+  photo?: { url?: string | null; alt?: string | null } | null
+  org?: boolean
+}) {
   const initials = name
     .split(/\s+/)
     .filter(Boolean)
@@ -206,7 +266,12 @@ export function Avatar({ name, photo, org = false }: { name: string; photo?: { u
     .join('')
   return (
     <span className={`avatar ${org ? 'avatar--org' : ''}`} aria-hidden="true">
-      {photo?.url ? <img src={photo.url} alt="" loading="lazy" width={52} height={52} /> : initials}
+      {photo?.url ? (
+        // eslint-disable-next-line @next/next/no-img-element -- WebP rendition generated at upload
+        <img src={photo.url} alt="" loading="lazy" width={52} height={52} />
+      ) : (
+        initials
+      )}
     </span>
   )
 }

@@ -1,10 +1,14 @@
-import Link from 'next/link'
+import Link from '@/components/SmartLink'
 import { Icon } from './Icon'
 import { ProvenanceBadge, TaxChips } from './ui'
-import { formatDateRange } from '@/lib/format'
+import { formatDateRange, isPast } from '@/lib/format'
 import type { Event } from '@/payload-types'
 
-export const FORMAT: Record<string, string> = { online: 'Online', 'in-person': 'In person', hybrid: 'Hybrid' }
+export const FORMAT: Record<string, string> = {
+  online: 'Online',
+  'in-person': 'In person',
+  hybrid: 'Hybrid',
+}
 
 export const EVENT_TYPE: Record<string, string> = {
   dialogue: 'Policy dialogue',
@@ -17,12 +21,12 @@ export const EVENT_TYPE: Record<string, string> = {
 
 export function EventRow({ e, show }: { e: Event; show: boolean }) {
   const start = new Date(e.startDate)
-  const past = start.getTime() < Date.now()
+  const past = isPast(e.startDate)
   const regOpen =
     !past &&
     e.registration?.mode &&
     e.registration.mode !== 'none' &&
-    !(e.registration.closesAt && new Date(e.registration.closesAt).getTime() < Date.now())
+    !isPast(e.registration.closesAt)
   return (
     <article className="event-row">
       <div className={`date-block ${past ? 'date-block--past' : ''}`} aria-hidden="true">
@@ -33,9 +37,13 @@ export function EventRow({ e, show }: { e: Event; show: boolean }) {
       <div className="stack">
         <div className="item__type">
           <span className="dot" aria-hidden="true" />
-          <span>{e.eventType ? EVENT_TYPE[e.eventType] ?? e.eventType : 'Event'}</span>
+          <span>{e.eventType ? (EVENT_TYPE[e.eventType] ?? e.eventType) : 'Event'}</span>
           <span>{FORMAT[e.format]}</span>
-          {past ? <span className="badge">Past</span> : regOpen ? <span className="badge badge--live">Registration open</span> : null}
+          {past ? (
+            <span className="badge">Past</span>
+          ) : regOpen ? (
+            <span className="badge badge--live">Registration open</span>
+          ) : null}
           <ProvenanceBadge provenance={e.provenance} show={show} />
         </div>
         <h3 className="item__title">

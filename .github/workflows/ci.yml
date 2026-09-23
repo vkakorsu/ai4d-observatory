@@ -11,4 +11,8 @@ jobs:
         with: { node-version: 22, cache: pnpm }
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
+      - run: pnpm lint
       - run: pnpm test
+      # Fails on any high or critical advisory in runtime dependencies (Section 3.1.6 b, 3.1.9 e).
+      # Two moderate advisories are accepted and recorded in docs/THIRD_PARTY_REGISTER.md.
+      - run: pnpm audit --prod --audit-level=high

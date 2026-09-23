@@ -61,6 +61,7 @@
   text-decoration: none;
   font-size: var(--step-0);
   font-weight: 500;
+  white-space: nowrap;
   border-bottom: 2px solid transparent;
   transition: border-color var(--dur) var(--ease);
 }
@@ -117,7 +118,9 @@
   margin: 0;
 }
 .nav-toggle__panel a {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
   padding: var(--s-3) var(--s-3);
   color: var(--ink);
   text-decoration: none;
@@ -130,7 +133,8 @@
 .nav-toggle__panel a[aria-current='page'] {
   color: var(--accent);
 }
-@media (min-width: 64em) {
+/* Seven sections plus Search need about 1150px on one line; below that the menu button is clearer than wrapping labels. */
+@media (min-width: 72em) {
   .site-nav {
     display: block;
   }
@@ -447,6 +451,169 @@ a.stat:hover .stat__l {
   padding-top: 0;
 }
 
+/* Hero search. The repository is the product, so search sits where the eye lands. */
+.hero-search {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-top: var(--s-6);
+  max-width: 36rem;
+  background: var(--surface);
+  border: 1px solid var(--ink-32);
+  border-radius: var(--radius);
+  padding: 0.3rem 0.3rem 0.3rem var(--s-4);
+  color: var(--ink-56);
+}
+.hero-search:focus-within {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px var(--accent-tint);
+}
+.hero-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: var(--step-1);
+  padding: var(--s-2) 0;
+  color: var(--ink);
+}
+.hero-search input:focus {
+  outline: none;
+}
+.hero-search input::placeholder {
+  color: var(--ink-56);
+}
+
+/* Lead feature with generated art */
+.lead {
+  grid-template-columns: 1fr;
+}
+.lead__art {
+  display: block;
+  border: var(--rule);
+  overflow: hidden;
+  aspect-ratio: 16 / 7;
+}
+.lead__art svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.lead__text {
+  display: grid;
+  gap: var(--s-4);
+  align-content: start;
+}
+.lead--portrait .lead__art {
+  aspect-ratio: 3 / 4;
+  max-width: 10rem;
+  box-shadow: 4px 6px 0 var(--ink-8);
+}
+@media (min-width: 40em) {
+  .lead--portrait {
+    grid-template-columns: 10rem minmax(0, 1fr);
+    gap: var(--s-5);
+    align-items: start;
+  }
+}
+
+/* Six ecosystem enablers, the Observatory's own frame */
+.enabler-grid {
+  list-style: none;
+  margin: var(--s-5) 0 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s-3);
+  grid-template-columns: 1fr;
+}
+@media (min-width: 36em) {
+  .enabler-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 60em) {
+  .enabler-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+.enabler-grid > li + li {
+  margin: 0;
+}
+.enabler-tile {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto auto auto 1fr auto;
+  gap: var(--s-2);
+  padding: var(--s-5);
+  background: var(--surface);
+  border: var(--rule);
+  color: var(--ink);
+  text-decoration: none;
+  transition:
+    border-color var(--dur) var(--ease),
+    transform var(--dur) var(--ease);
+}
+.enabler-tile:hover {
+  border-color: var(--ink);
+}
+.enabler-tile__n {
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  color: var(--accent);
+  letter-spacing: 0.08em;
+}
+.enabler-tile__ramp {
+  display: flex;
+  gap: 3px;
+}
+.enabler-tile__ramp span {
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--ink-16);
+}
+.enabler-tile__ramp span.on {
+  border-color: transparent;
+}
+.enabler-tile strong {
+  font-family: var(--font-display);
+  font-size: var(--step-3);
+  font-weight: 400;
+  line-height: 1.15;
+}
+.enabler-tile__d {
+  font-size: var(--step-0);
+  color: var(--ink-72);
+}
+.enabler-tile__c {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  font-size: var(--step--1);
+  font-weight: 600;
+  color: var(--accent-deep);
+}
+.country-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+  margin-top: var(--s-5);
+}
+.country-strip .label {
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-56);
+  margin-right: var(--s-2);
+}
+.country-strip .chip {
+  font-size: var(--step-0);
+  padding: 0.2rem 0.6rem;
+  min-height: 1.75rem;
+}
+
 /* Any number of audience entries (the set is confirmed in requirements refinement), so the last row stretches rather than leaving holes. */
 .audience-grid {
   display: flex;
@@ -516,6 +683,56 @@ a.stat:hover .stat__l {
   .item--with-cover {
     grid-template-columns: 7.5rem minmax(0, 1fr);
     align-items: start;
+  }
+  .item--cover-wide {
+    grid-template-columns: 12.5rem minmax(0, 1fr);
+  }
+}
+
+/* Listing thumbnails. Generated art or an uploaded image, in a fixed frame so rows align. */
+.thumb {
+  display: block;
+  overflow: hidden;
+  border: var(--rule);
+  background: var(--paper-deep);
+  transition:
+    transform var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease);
+}
+.thumb svg,
+.thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.thumb--portrait {
+  aspect-ratio: 3 / 4;
+  max-width: 7.5rem;
+  box-shadow: 2px 3px 0 var(--ink-8);
+}
+.thumb--wide {
+  aspect-ratio: 16 / 9;
+}
+@media (max-width: 39.99em) {
+  /* On phones a portrait cover sits beside the text rather than above it, so results stay dense. */
+  .item--with-cover:not(.item--cover-wide) {
+    grid-template-columns: 4.5rem minmax(0, 1fr);
+    align-items: start;
+  }
+  .item--cover-wide .thumb--wide {
+    max-height: 9rem;
+  }
+}
+@media (hover: hover) {
+  .item:hover .thumb--portrait {
+    transform: translateY(-2px);
+    box-shadow: 3px 6px 0 var(--ink-16);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .thumb {
+    transition: none;
   }
 }
 .item__type {
@@ -633,9 +850,115 @@ a.stat:hover .stat__l {
 }
 .cover-img {
   width: 100%;
+  height: auto;
   aspect-ratio: 16 / 9;
   object-fit: cover;
   border: var(--rule);
+}
+.hero-figure {
+  margin: 0 0 var(--s-5);
+}
+.hero-figure--art {
+  aspect-ratio: 3 / 1;
+  max-height: 15rem;
+  width: 100%;
+  overflow: hidden;
+  border: var(--rule);
+}
+.cover-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Publication cover in the detail rail */
+.pub-cover {
+  display: block;
+  width: 100%;
+  max-width: 13rem;
+  height: auto;
+  aspect-ratio: 3 / 4;
+  border: var(--rule);
+  box-shadow: 4px 6px 0 var(--ink-8);
+  margin-bottom: var(--s-5);
+}
+
+/* Share and cite */
+.share-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-1) var(--s-2);
+  margin-top: var(--s-4);
+  font-size: var(--step--1);
+}
+.share-bar .label {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-56);
+  margin-right: var(--s-1);
+}
+.share-bar__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid var(--ink-16);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  min-height: 1.75rem;
+}
+.share-bar__link:hover {
+  border-color: var(--ink);
+}
+
+/* Evaluator tour on /prototype-notes */
+.tour {
+  list-style: none;
+  counter-reset: tour;
+  margin: var(--s-4) 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0;
+  border-top: var(--rule);
+}
+.tour > li {
+  counter-increment: tour;
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+  gap: var(--s-1) var(--s-4);
+  padding: var(--s-3) 0;
+  border-bottom: var(--rule);
+  margin: 0;
+  align-items: baseline;
+}
+.tour > li::before {
+  content: counter(tour, decimal-leading-zero);
+  font-family: var(--font-mono);
+  color: var(--accent);
+  grid-row: span 2;
+}
+.tour a {
+  font-family: var(--font-display);
+  font-size: var(--step-2);
+}
+.tour__proves {
+  grid-column: 2;
+  color: var(--ink-72);
+  font-size: var(--step-0);
+}
+.tour__ref {
+  grid-column: 3;
+  grid-row: 1;
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  color: var(--ink-56);
+  white-space: nowrap;
 }
 
 /* ---------- Chips, badges ---------- */
@@ -665,7 +988,9 @@ a.stat:hover .stat__l {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+  transition:
+    border-color var(--dur) var(--ease),
+    background var(--dur) var(--ease);
 }
 a.chip:hover {
   border-color: var(--ink);
@@ -881,7 +1206,10 @@ a.chip:hover {
   font-weight: 600;
   text-decoration: none;
   line-height: 1.2;
-  transition: background var(--dur) var(--ease), color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+  transition:
+    background var(--dur) var(--ease),
+    color var(--dur) var(--ease),
+    border-color var(--dur) var(--ease);
 }
 .btn:hover {
   background: var(--ink);
@@ -895,6 +1223,16 @@ a.chip:hover {
 .btn--primary:hover {
   background: var(--accent-deep);
   border-color: var(--accent-deep);
+  color: #fff;
+}
+.btn--ink {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+}
+.btn--ink:hover {
+  background: var(--ink-72);
+  border-color: var(--ink-72);
   color: #fff;
 }
 .btn--ghost {
@@ -1230,6 +1568,7 @@ a.chip:hover {
 
 /* ---------- Data / map ---------- */
 .map-figure {
+  position: relative;
   margin: 0;
   background: var(--surface);
   border: var(--rule);
@@ -1248,6 +1587,40 @@ a.chip:hover {
 .map-figure a.country-link:hover path {
   stroke: var(--ink);
   stroke-width: 1.6;
+}
+/* Hovering one country quietens the rest, so the eye finds it. CSS only. */
+.map-figure svg:has(a.country-link:hover) path.country {
+  opacity: 0.6;
+}
+.map-figure svg:has(a.country-link:hover) a.country-link:hover path.country {
+  opacity: 1;
+}
+.map-figure a.country-link:focus-visible {
+  outline: none;
+}
+.map-tip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 5;
+  pointer-events: none;
+  display: grid;
+  gap: 0.1rem;
+  max-width: 16rem;
+  padding: var(--s-2) var(--s-3);
+  background: var(--ink);
+  color: #fff;
+  font-size: var(--step--1);
+  line-height: 1.35;
+  border-radius: var(--radius);
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.18);
+  transition: opacity var(--dur) var(--ease);
+}
+.map-tip strong {
+  font-weight: 600;
+}
+.map-tip span {
+  color: var(--ink-16);
 }
 .map-figure path.context {
   fill: var(--paper-deep);
@@ -1305,7 +1678,7 @@ a.chip:hover {
 }
 .indicator-select .field {
   min-width: 14rem;
-  flex: 1 1 14rem;
+  flex: 0 1 30rem;
 }
 .table-wrap {
   overflow-x: auto;

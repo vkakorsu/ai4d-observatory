@@ -48,7 +48,11 @@ export const makeScale = (values: number[], min?: number | null, max?: number | 
   return { colour, legend, breaks }
 }
 
-export const formatValue = (v: number | null | undefined, unit: string, valueType?: string): string => {
+export const formatValue = (
+  v: number | null | undefined,
+  unit: string,
+  valueType?: string,
+): string => {
   if (v === null || v === undefined || !Number.isFinite(v)) return 'No data'
   if (valueType === 'percent') return `${round(v)}%`
   return unit.toLowerCase().startsWith('count') ? String(Math.round(v)) : String(round(v))
@@ -64,9 +68,9 @@ export const summarise = (
   unit: string,
   higherIsBetter = true,
 ): string => {
-  const withData = rows.filter((r) => r.value !== null && Number.isFinite(r.value as number)) as Array<
-    ValueRow & { value: number }
-  >
+  const withData = rows.filter(
+    (r) => r.value !== null && Number.isFinite(r.value as number),
+  ) as Array<ValueRow & { value: number }>
   if (withData.length === 0) return `No values are recorded for ${indicatorName} in ${year}.`
   const sorted = [...withData].sort((a, b) => b.value - a.value)
   const top = sorted[0]
@@ -75,14 +79,58 @@ export const summarise = (
   const missing = rows.length - withData.length
   const best = higherIsBetter ? top : bottom
   const worst = higherIsBetter ? bottom : top
+  // "Singapore at 92" reads better than "Singapore at 92 score 0 to 100"; the unit is stated in the caption.
+  const u = /^(score|count|index|rank)/i.test(unit.trim()) ? '' : ` ${unit}`
   const parts = [
     `${indicatorName}, ${year}. ${withData.length} of ${rows.length} countries have data.`,
-    `Highest value ${top.country} at ${round(top.value)} ${unit}. Lowest ${bottom.country} at ${round(bottom.value)} ${unit}.`,
-    `Median country ${mid.country} at ${round(mid.value)} ${unit}.`,
+    `Highest value ${top.country} at ${round(top.value)}${u}. Lowest ${bottom.country} at ${round(bottom.value)}${u}.`,
+    `Median country ${mid.country} at ${round(mid.value)}${u}.`,
   ]
   if (best.iso3 !== top.iso3 || !higherIsBetter)
-    parts.push(`Lower values are better for this indicator, so ${best.country} leads and ${worst.country} trails.`)
-  if (missing > 0) parts.push(`${missing} ${missing === 1 ? 'country has' : 'countries have'} no data for this year.`)
+    parts.push(
+      `Lower values are better for this indicator, so ${best.country} leads and ${worst.country} trails.`,
+    )
+  if (missing > 0)
+    parts.push(
+      `${missing} ${missing === 1 ? 'country has' : 'countries have'} no data for this year.`,
+    )
+  return parts.join(' ')
+}
+
+/**
+ * Plain-language summary for categorical (status) indicators. Counts countries per status, highest code first,
+ * because "India at 3 status" means nothing to a reader.
+ */
+export const summariseStatus = (
+  rows: ValueRow[],
+  indicatorName: string,
+  year: number | string,
+  labels: Array<{ code: number; label: string }>,
+): string => {
+  const withData = rows.filter((r) => r.value !== null && Number.isFinite(r.value as number))
+  if (withData.length === 0) return `No values are recorded for ${indicatorName} in ${year}.`
+  const byCode = new Map<number, string[]>()
+  for (const r of withData)
+    byCode.set(r.value as number, [...(byCode.get(r.value as number) ?? []), r.country])
+  const listNames = (names: string[]) =>
+    names.length <= 3
+      ? names.join(', ').replace(/, ([^,]*)$/, ' and $1')
+      : `${names.slice(0, 3).join(', ')} and ${names.length - 3} more`
+  const parts = [
+    `${indicatorName}, ${year}. ${withData.length} of ${rows.length} countries have data.`,
+  ]
+  for (const code of [...byCode.keys()].sort((a, b) => b - a)) {
+    const names = byCode.get(code) ?? []
+    const label = labels.find((l) => l.code === code)?.label ?? `Code ${code}`
+    parts.push(
+      `${label}: ${names.length} ${names.length === 1 ? 'country' : 'countries'} (${listNames(names)}).`,
+    )
+  }
+  const missing = rows.length - withData.length
+  if (missing > 0)
+    parts.push(
+      `${missing} ${missing === 1 ? 'country has' : 'countries have'} no data for this year.`,
+    )
   return parts.join(' ')
 }
 

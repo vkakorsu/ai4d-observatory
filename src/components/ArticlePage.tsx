@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { DetailPage } from './DetailPage'
+import { HeroImage } from './ArtCover'
 import { RichText } from './RichText'
 import { PeopleLinks, RelatedList } from './content'
 import { ExternalLink, JsonLd, MetaList } from './ui'
@@ -13,18 +14,31 @@ import { absoluteUrl } from '@/lib/format'
 import { CONTENT_TYPES, pathFor, type ContentTypeKey } from '@/lib/content-types'
 import type { News, OpEd, Post } from '@/payload-types'
 
-type Article = (Post | OpEd | News) & { outlet?: string | null; externalUrl?: string | null; body?: Post['body'] }
+type Article = (Post | OpEd | News) & {
+  outlet?: string | null
+  externalUrl?: string | null
+  body?: Post['body']
+}
 type ArticleType = Extract<ContentTypeKey, 'posts' | 'op-eds' | 'news'>
 
 const LABEL: Record<ArticleType, { type: string; crumb: string; listing: string }> = {
   posts: { type: 'Blog', crumb: 'Blog and commentary', listing: '/commentary?type=posts' },
-  'op-eds': { type: 'Op-ed', crumb: 'Op-eds and external publications', listing: '/commentary?type=op-eds' },
+  'op-eds': {
+    type: 'Op-ed',
+    crumb: 'Op-eds and external publications',
+    listing: '/commentary?type=op-eds',
+  },
   news: { type: 'News', crumb: 'News', listing: '/commentary?type=news' },
 }
 
 export async function articleStaticParams(collection: ArticleType) {
   const payload = await getPayloadClient()
-  const res = await payload.find({ collection, limit: 500, depth: 0, where: { _status: { equals: 'published' } } })
+  const res = await payload.find({
+    collection,
+    limit: 500,
+    depth: 0,
+    where: { _status: { equals: 'published' } },
+  })
   return res.docs.map((d) => ({ slug: d.slug ?? '' })).filter((p) => p.slug)
 }
 
@@ -44,10 +58,16 @@ export async function articleMetadata(collection: ArticleType, slug: string): Pr
 
 export async function ArticlePage({ collection, slug }: { collection: ArticleType; slug: string }) {
   const payload = await getPayloadClient()
-  const [doc, settings] = await Promise.all([findBySlug<Article>(payload, collection, slug, 2), getSettings()])
+  const [doc, settings] = await Promise.all([
+    findBySlug<Article>(payload, collection, slug, 2),
+    getSettings(),
+  ])
   if (!doc) notFound()
   const show = Boolean(settings.showPrototypeNotices)
-  const related = await relatedContent(payload, doc as unknown as Record<string, unknown>, { collection, id: doc.id })
+  const related = await relatedContent(payload, doc as unknown as Record<string, unknown>, {
+    collection,
+    id: doc.id,
+  })
   const labels = LABEL[collection]
   const authors = Array.isArray(doc.authors) ? doc.authors.filter((a) => typeof a === 'object') : []
   const authorNames = authors.map((a) => (a as { name: string }).name)
@@ -57,7 +77,12 @@ export async function ArticlePage({ collection, slug }: { collection: ArticleTyp
 
   return (
     <DetailPage
-      crumbs={[{ href: '/commentary', label: 'Commentary' }, { href: labels.listing, label: labels.crumb }, { label: doc.title }]}
+      path={path}
+      crumbs={[
+        { href: '/commentary', label: 'Commentary' },
+        { href: labels.listing, label: labels.crumb },
+        { label: doc.title },
+      ]}
       type={labels.type}
       title={doc.title}
       summary={doc.summary}
@@ -73,14 +98,23 @@ export async function ArticlePage({ collection, slug }: { collection: ArticleTyp
                 <Icon name="external" size={16} /> Read the full piece
               </h2>
               <p className="filemeta">Published in {doc.outlet}</p>
-              <TrackLink className="btn btn--primary" href={doc.externalUrl} event="outbound_oped" data={{ resource: doc.title }} rel="noopener noreferrer">
+              <TrackLink
+                className="btn btn--primary"
+                href={doc.externalUrl}
+                event="outbound_oped"
+                data={{ resource: doc.title }}
+                rel="noopener noreferrer"
+              >
                 Open at {doc.outlet} <Icon name="external" size={14} />
               </TrackLink>
             </div>
           )}
           <MetaList
             items={[
-              authorNames.length > 0 && { label: authorNames.length > 1 ? 'Authors' : 'Author', value: authors.length ? <PeopleLinks people={authors} /> : doc.authorText },
+              authorNames.length > 0 && {
+                label: authorNames.length > 1 ? 'Authors' : 'Author',
+                value: authors.length ? <PeopleLinks people={authors} /> : doc.authorText,
+              },
               collection === 'op-eds' && doc.outlet && { label: 'Outlet', value: doc.outlet },
             ]}
           />
@@ -97,22 +131,16 @@ export async function ArticlePage({ collection, slug }: { collection: ArticleTyp
           authors: authorNames,
         })}
       />
-      {image?.url && (
-        <figure style={{ marginBottom: 'var(--s-5)' }}>
-          <img className="cover-img" src={image.sizes?.wide?.url ?? image.url} alt={image.alt} width={1440} height={810} />
-          {(image.caption || image.credit) && (
-            <figcaption className="tiny muted">
-              {image.caption} {image.credit && <span>Credit. {image.credit}</span>}
-            </figcaption>
-          )}
-        </figure>
+      {collection !== 'op-eds' && (
+        <HeroImage image={image} seed={`${collection}:${slug}`} label={labels.type} />
       )}
       {collection === 'op-eds' ? (
         <div className="prose prose--serif">
           <p>{doc.summary}</p>
           {doc.externalUrl && (
             <p className="small" style={{ fontFamily: 'var(--font-text)' }}>
-              This piece was published by {doc.outlet}. <ExternalLink href={doc.externalUrl}>Read it there</ExternalLink>.
+              This piece was published by {doc.outlet}.{' '}
+              <ExternalLink href={doc.externalUrl}>Read it there</ExternalLink>.
             </p>
           )}
         </div>
@@ -120,7 +148,8 @@ export async function ArticlePage({ collection, slug }: { collection: ArticleTyp
         <RichText data={doc.body} serif />
       )}
       <p className="tiny muted" style={{ marginTop: 'var(--s-6)' }}>
-        {CONTENT_TYPES[collection].label} · Views are the authors’ own and do not necessarily reflect those of LIRNEasia, its partners or its funders.
+        {CONTENT_TYPES[collection].label} · Views are the authors’ own and do not necessarily
+        reflect those of LIRNEasia, its partners or its funders.
       </p>
     </DetailPage>
   )

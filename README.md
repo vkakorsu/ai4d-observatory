@@ -47,7 +47,7 @@ Demo credentials are printed at the end of `pnpm seed` and set in `.env` (`SEED_
 | 3.1.4 (e) accessible alternatives | Every visualisation ships with a plain-language summary, a sortable table and a CSV download (`/data/[indicator]/csv`) |
 | 3.1.2 email-gated downloads | Per-file `open` or `gated` switch on media. Form with purpose statement and consent. Requests stored in `download-requests` and exportable. Time-limited HMAC-signed link, no personal data in the URL |
 | 2.1 newsletter and sign-ups | Subscription form with a provider adapter (local store, Brevo, Mailchimp). Newsletter archive with web and PDF versions. Event registration with capacity, waitlist and export |
-| 3.1.6 (a) WCAG 2.2 AA | Skip link, landmarks, visible focus, keyboard-operable filters and forms, labelled inputs, contrast-checked palette, reduced-motion support, SVG maps with titles, descriptions and table equivalents. `pnpm a11y` runs axe-core over thirty page types and reports zero violations |
+| 3.1.6 (a) WCAG 2.2 AA | Skip link, landmarks, visible focus, keyboard-operable filters and forms, labelled inputs, contrast-checked palette, reduced-motion support, SVG maps with titles, descriptions and table equivalents. `pnpm a11y` runs axe-core over 34 page types; 33 report zero violations and the 404 page's pre-hydration HTML lacks `lang` (framework error shell, correct once loaded) |
 | 3.1.6 (c) privacy | Purpose statement beside every form, consent text and version stored with each record, hashed IPs only, `retentionMonths` in Site settings enforced by a nightly purge task (`src/jobs/retention.ts`), draft privacy notice and accessibility statement as CMS pages |
 | 3.1.6 (d) analytics | Adapter that fires page views and events (download, gated unlock, subscribe, register, dataset access, opportunity open) to Umami or GA4 when configured. Provider `none` by default |
 | 3.1.6 (e) SEO | Clean URLs, per-page metadata overrides, canonical URLs, generated Open Graph image, XML sitemap, RSS feeds (site-wide `/feed.xml` and per type `/feed/<type>.xml`), JSON-LD (WebSite, Article, Report, Dataset, Event, Person, Organization, BreadcrumbList), correct 404 status codes, `robots.txt` with a no-index switch for staging |
@@ -148,11 +148,11 @@ ai4d-prototype/
 
 ## 7. Technology
 
-Next.js 15.4 (App Router, server components), Payload CMS 3 (embedded, Lexical rich text, search plugin, import/export plugin, versions, drafts and trash), TypeScript, SQLite via libSQL for development and the evaluation prototype, PostgreSQL adapter for production, d3-geo and Natural Earth boundaries (`world-atlas`) for server-rendered SVG maps, sharp for image sizes, Vitest for tests. No client-side data fetching on content pages. Licence: MIT.
+Next.js 16.3 (App Router, server components, server actions for public forms; 16.3.6 carries the May, August and September 2026 security fixes), Payload CMS 3 (embedded, Lexical rich text, search plugin, import/export plugin, versions, drafts and trash), TypeScript, SQLite via libSQL for development and the evaluation prototype, PostgreSQL adapter for production, d3-geo and Natural Earth boundaries (`world-atlas`) for server-rendered SVG maps, sharp for WebP renditions generated at upload, Satori (`next/og`) for per-item share cards, Vitest for tests. No client-side data fetching on content pages. Licence: MIT.
 
 ## 8. Tests
 
-`pnpm test` runs eight files, ninety-plus assertions:
+`pnpm test` runs nine files, 115 tests:
 
 - Filter query builder from URL parameters, including the unknown-slug case that must return nothing rather than everything.
 - Search index text assembly and the `beforeSync` enrichment, with a fake Payload.
@@ -161,6 +161,7 @@ Next.js 15.4 (App Router, server components), Payload CMS 3 (embedded, Lexical r
 - Indicator statistics, choropleth scale (equal-interval and quantile, monotonic), text summary, CSV escaping.
 - Content type registry: every Section 3.1.2 module has a collection, a listing route and a detail route on disk.
 - Slug generation.
-- Integration: boots Payload against in-memory SQLite, creates taxonomy terms and a use case, asserts that listing filters and the unified search index return it, that drafts stay out of both, that a contributor can draft but not publish, and that the retention purge deletes expired download records and keeps recent ones.
+- Search ranking: tokenising, accent folding, field weighting, phrase bonus, edit distance and spelling suggestions.
+- Integration: boots Payload against in-memory SQLite, creates taxonomy terms and a use case, asserts that listing filters and the unified search index return it, that drafts stay out of both, that a contributor can draft but not publish, that the retention purge deletes expired download records and keeps recent ones, that archiving removes an item from listings and search and restoring brings it back, that event join links are hidden from anonymous API readers but returned to registrants, that gated downloads record consent and sign links without the address in the URL, that stored filenames cannot escape the media directory, and that spreadsheet formulas typed into forms are neutralised before CSV export.
 
 `pnpm a11y` is the accessibility sweep. It fetches the server-rendered HTML of every page type (listings, detail pages, hubs, search, policies, the 404 page) and runs axe-core on each. It exits non-zero on any violation and is meant to run in CI against a preview deployment. Colour contrast is verified separately in a real browser because jsdom does not compute layout.

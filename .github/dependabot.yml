@@ -1,0 +1,20 @@
+# Weekly dependency update pull requests (Section 3.1.6 b "keep dependencies/plugins updated").
+# Payload and Next.js move together, so they are grouped and reviewed on staging before production.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule: { interval: weekly, day: monday }
+    open-pull-requests-limit: 5
+    groups:
+      payload-and-next:
+        patterns: ['payload', '@payloadcms/*', 'next', 'eslint-config-next', 'react', 'react-dom']
+      everything-else:
+        patterns: ['*']
+        exclude-patterns: ['payload', '@payloadcms/*', 'next', 'eslint-config-next', 'react', 'react-dom']
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: monthly }
+  - package-ecosystem: docker
+    directory: /
+    schedule: { interval: monthly }

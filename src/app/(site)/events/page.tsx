@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
+import Link from '@/components/SmartLink'
 import { ListingPage, type PageProps } from '@/components/ListingPage'
 import { EventRow } from '@/components/EventRow'
 import { eventFilters } from '@/lib/filters'
@@ -8,7 +8,8 @@ import type { Event } from '@/payload-types'
 
 export const metadata: Metadata = {
   title: 'Events',
-  description: 'Policy dialogues, webinars, workshops, convenings, scope-a-thons and Community of Practice sessions of the Asia AI4D Observatory.',
+  description:
+    'Policy dialogues, webinars, workshops, convenings, scope-a-thons and Community of Practice sessions of the Asia AI4D Observatory.',
   alternates: { types: { 'application/rss+xml': '/feed/events.xml' } },
 }
 
@@ -28,7 +29,11 @@ export default async function EventsPage({ searchParams }: PageProps) {
       lede="Regional policy dialogues, webinars, workshops and Community of Practice sessions. Registration happens on this site where the Observatory hosts the event, and through the organiser’s page where it does not."
       noun="event"
       sort={when === 'past' ? '-startDate' : 'startDate'}
-      extraWhere={when === 'past' ? { startDate: { less_than: now } } : { startDate: { greater_than_equal: now } }}
+      extraWhere={
+        when === 'past'
+          ? { startDate: { less_than: now } }
+          : { startDate: { greater_than_equal: now } }
+      }
       extraControls={when === 'past' ? <input type="hidden" name="when" value="past" /> : undefined}
       intro={
         <nav className="tabs" aria-label="Upcoming or past">

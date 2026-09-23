@@ -1,6 +1,13 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
-import { ActiveFilters, Filters, Item, ItemList, Pagination, ResultsHead } from '@/components/listing'
+import Link from '@/components/SmartLink'
+import {
+  ActiveFilters,
+  Filters,
+  Item,
+  ItemList,
+  Pagination,
+  ResultsHead,
+} from '@/components/listing'
 import type { PageProps } from '@/components/ListingPage'
 import { Breadcrumbs, Empty, PageHeader } from '@/components/ui'
 import { Icon } from '@/components/Icon'
@@ -12,14 +19,27 @@ import type { ContentTypeKey } from '@/lib/content-types'
 
 export const metadata: Metadata = {
   title: 'Commentary. Blog, op-eds and news',
-  description: 'Blog posts and commentary, op-eds and external publications, and news from the Asia AI4D Observatory.',
+  description:
+    'Blog posts and commentary, op-eds and external publications, and news from the Asia AI4D Observatory.',
   alternates: { types: { 'application/rss+xml': '/feed/posts.xml' } },
 }
 
 const TYPES: Array<{ value: ContentTypeKey; label: string; lede: string }> = [
-  { value: 'posts', label: 'Blog and commentary', lede: 'Reflections and analysis from the Observatory team, partners and guest contributors.' },
-  { value: 'op-eds', label: 'Op-eds and external publications', lede: 'Writing by Observatory researchers published in newspapers, journals and partner outlets.' },
-  { value: 'news', label: 'News', lede: 'Announcements and updates from the Observatory and the AI4D network.' },
+  {
+    value: 'posts',
+    label: 'Blog and commentary',
+    lede: 'Reflections and analysis from the Observatory team, partners and guest contributors.',
+  },
+  {
+    value: 'op-eds',
+    label: 'Op-eds and external publications',
+    lede: 'Writing by Observatory researchers published in newspapers, journals and partner outlets.',
+  },
+  {
+    value: 'news',
+    label: 'News',
+    lede: 'Announcements and updates from the Observatory and the AI4D network.',
+  },
 ]
 
 export default async function CommentaryPage({ searchParams }: PageProps) {
@@ -31,7 +51,12 @@ export default async function CommentaryPage({ searchParams }: PageProps) {
   const [settings, options, result] = await Promise.all([
     getSettings(),
     filterOptions(payload, commentaryFilters),
-    listCollection<Record<string, unknown> & { id: string | number }>(payload, type.value, sp, commentaryFilters),
+    listCollection<Record<string, unknown> & { id: string | number }>(
+      payload,
+      type.value,
+      sp,
+      commentaryFilters,
+    ),
   ])
   const show = Boolean(settings.showPrototypeNotices)
   // Keep the type when filters change.
@@ -43,7 +68,11 @@ export default async function CommentaryPage({ searchParams }: PageProps) {
       <PageHeader kicker="Commentary" title={type.label} lede={type.lede} />
       <nav className="tabs" aria-label="Commentary type">
         {TYPES.map((t) => (
-          <Link key={t.value} href={`${action}?type=${t.value}`} aria-current={t.value === type.value ? 'page' : undefined}>
+          <Link
+            key={t.value}
+            href={`${action}?type=${t.value}`}
+            aria-current={t.value === type.value ? 'page' : undefined}
+          >
             {t.label}
           </Link>
         ))}
@@ -66,7 +95,12 @@ export default async function CommentaryPage({ searchParams }: PageProps) {
               </a>
             </p>
           </ResultsHead>
-          <ActiveFilters defs={commentaryFilters} options={options} sp={spWithType} action={`${action}?type=${type.value}`} />
+          <ActiveFilters
+            defs={commentaryFilters}
+            options={options}
+            sp={spWithType}
+            action={`${action}?type=${type.value}`}
+          />
           {result.docs.length === 0 ? (
             <Empty title="Nothing here yet">
               <p>No {type.label.toLowerCase()} match these filters.</p>
@@ -91,7 +125,12 @@ export default async function CommentaryPage({ searchParams }: PageProps) {
               ))}
             </ItemList>
           )}
-          <Pagination page={result.page} totalPages={result.totalPages} sp={spWithType} action={action} />
+          <Pagination
+            page={result.page}
+            totalPages={result.totalPages}
+            sp={spWithType}
+            action={action}
+          />
         </div>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
+import Link from '@/components/SmartLink'
 import { notFound } from 'next/navigation'
 import { DetailPage } from '@/components/DetailPage'
 import { RichText } from '@/components/RichText'
@@ -25,7 +25,12 @@ const ROLE: Record<string, string> = {
 
 export async function generateStaticParams() {
   const payload = await getPayloadClient()
-  const res = await payload.find({ collection: 'organisations', limit: 500, depth: 0, where: { _status: { equals: 'published' } } })
+  const res = await payload.find({
+    collection: 'organisations',
+    limit: 500,
+    depth: 0,
+    where: { _status: { equals: 'published' } },
+  })
   return res.docs.map((d) => ({ slug: d.slug ?? '' })).filter((p) => p.slug)
 }
 
@@ -33,22 +38,57 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const doc = await findBySlug<Organisation>(await getPayloadClient(), 'organisations', slug, 1)
   if (!doc) return {}
-  return buildMetadata({ title: doc.name, description: doc.summary, path: `/organisations/${slug}`, seo: doc.seo })
+  return buildMetadata({
+    title: doc.name,
+    description: doc.summary,
+    path: `/organisations/${slug}`,
+    seo: doc.seo,
+  })
 }
 
 export default async function OrganisationPage({ params }: Props) {
   const { slug } = await params
   const payload = await getPayloadClient()
-  const [doc, settings] = await Promise.all([findBySlug<Organisation>(payload, 'organisations', slug, 2), getSettings()])
+  const [doc, settings] = await Promise.all([
+    findBySlug<Organisation>(payload, 'organisations', slug, 2),
+    getSettings(),
+  ])
   if (!doc) notFound()
   const show = Boolean(settings.showPrototypeNotices)
-  const st = doc.stakeholderType && typeof doc.stakeholderType === 'object' ? doc.stakeholderType : null
+  const st =
+    doc.stakeholderType && typeof doc.stakeholderType === 'object' ? doc.stakeholderType : null
   const published = { _status: { equals: 'published' } }
   const [people, useCases, publications, events] = await Promise.all([
-    payload.find({ collection: 'people', where: { and: [published, { organisation: { equals: doc.id } }] }, limit: 30, depth: 0, sort: 'name', overrideAccess: false }),
-    payload.find({ collection: 'use-cases', where: { and: [published, { organisations: { equals: doc.id } }] }, limit: 20, depth: 1, overrideAccess: false }),
-    payload.find({ collection: 'publications', where: { and: [published, { organisations: { equals: doc.id } }] }, limit: 20, depth: 1, overrideAccess: false }),
-    payload.find({ collection: 'events', where: { and: [published, { organisations: { equals: doc.id } }] }, limit: 20, depth: 1, sort: '-startDate', overrideAccess: false }),
+    payload.find({
+      collection: 'people',
+      where: { and: [published, { organisation: { equals: doc.id } }] },
+      limit: 30,
+      depth: 0,
+      sort: 'name',
+      overrideAccess: false,
+    }),
+    payload.find({
+      collection: 'use-cases',
+      where: { and: [published, { organisations: { equals: doc.id } }] },
+      limit: 20,
+      depth: 1,
+      overrideAccess: false,
+    }),
+    payload.find({
+      collection: 'publications',
+      where: { and: [published, { organisations: { equals: doc.id } }] },
+      limit: 20,
+      depth: 1,
+      overrideAccess: false,
+    }),
+    payload.find({
+      collection: 'events',
+      where: { and: [published, { organisations: { equals: doc.id } }] },
+      limit: 20,
+      depth: 1,
+      sort: '-startDate',
+      overrideAccess: false,
+    }),
   ])
   const groups = [
     { title: 'Use cases', collection: 'use-cases' as const, docs: useCases.docs },
@@ -58,7 +98,11 @@ export default async function OrganisationPage({ params }: Props) {
 
   return (
     <DetailPage
-      crumbs={[{ href: '/directory?view=organisations', label: 'Organisations' }, { label: doc.name }]}
+      path={`/organisations/${slug}`}
+      crumbs={[
+        { href: '/directory?view=organisations', label: 'Organisations' },
+        { label: doc.name },
+      ]}
       type={st?.name ?? 'Organisation'}
       title={doc.name}
       summary={doc.summary}
@@ -68,20 +112,36 @@ export default async function OrganisationPage({ params }: Props) {
       aside={
         <>
           <div className="cluster" style={{ gap: 'var(--s-4)' }}>
-            <Avatar name={doc.acronym ?? doc.name} photo={typeof doc.logo === 'object' ? doc.logo : null} org />
+            <Avatar
+              name={doc.acronym ?? doc.name}
+              photo={typeof doc.logo === 'object' ? doc.logo : null}
+              org
+            />
             <div>
               <strong>{doc.acronym ?? doc.name}</strong>
               {doc.website && (
                 <div className="small">
-                  <ExternalLink href={doc.website}>{doc.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}</ExternalLink>
+                  <ExternalLink href={doc.website}>
+                    {doc.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                  </ExternalLink>
                 </div>
               )}
             </div>
           </div>
           <MetaList
             items={[
-              st && { label: 'Stakeholder type', value: <Link href={`/directory?view=organisations&stakeholder=${st.slug}`}>{st.name}</Link> },
-              doc.observatoryRole && { label: 'Role in the Observatory', value: ROLE[doc.observatoryRole] ?? doc.observatoryRole },
+              st && {
+                label: 'Stakeholder type',
+                value: (
+                  <Link href={`/directory?view=organisations&stakeholder=${st.slug}`}>
+                    {st.name}
+                  </Link>
+                ),
+              },
+              doc.observatoryRole && {
+                label: 'Role in the Observatory',
+                value: ROLE[doc.observatoryRole] ?? doc.observatoryRole,
+              },
               people.docs.length > 0 && {
                 label: 'People',
                 value: (
@@ -100,7 +160,9 @@ export default async function OrganisationPage({ params }: Props) {
         </>
       }
     >
-      <JsonLd data={jsonLd.organisation(doc.name, doc.website ?? absoluteUrl(`/organisations/${slug}`))} />
+      <JsonLd
+        data={jsonLd.organisation(doc.name, doc.website ?? absoluteUrl(`/organisations/${slug}`))}
+      />
       <RichText data={doc.description} serif />
       {groups.map((g) => (
         <section className="detail__block" key={g.title} aria-labelledby={`g-${g.collection}`}>

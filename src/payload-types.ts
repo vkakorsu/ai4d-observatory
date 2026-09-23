@@ -834,7 +834,7 @@ export interface Event {
   eventType?: ('dialogue' | 'webinar' | 'workshop' | 'convening' | 'scopeathon' | 'cop') | null;
   venue?: string | null;
   /**
-   * Meeting or stream link, shown to registrants.
+   * Meeting or stream link. Shown after registration, or on the event page when no registration is needed. Never exposed through the public API.
    */
   onlineUrl?: string | null;
   registration?: {

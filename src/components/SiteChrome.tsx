@@ -1,6 +1,7 @@
-import Link from 'next/link'
+import Link from '@/components/SmartLink'
 import { Icon } from './Icon'
 import { NavLinks } from './NavLinks'
+import { NavToggle } from './NavToggle'
 import { Wordmark } from './Wordmark'
 import type { SiteSetting } from '@/payload-types'
 import { SubscribeForm } from './forms/SubscribeForm'
@@ -25,15 +26,18 @@ export function SiteHeader({ settings }: { settings: SiteSetting }) {
           <nav className="site-nav" aria-label="Primary">
             <NavLinks variant="bar" />
           </nav>
-          <details className="nav-toggle">
-            <summary aria-label="Open menu">
-              <Icon name="menu" size={18} />
-              Menu
-            </summary>
+          <NavToggle
+            summary={
+              <summary>
+                <Icon name="menu" size={18} />
+                Menu
+              </summary>
+            }
+          >
             <nav className="nav-toggle__panel" aria-label="Primary, mobile">
               <NavLinks variant="panel" />
             </nav>
-          </details>
+          </NavToggle>
         </div>
       </header>
     </>
@@ -130,7 +134,9 @@ export function SiteFooter({ settings }: { settings: SiteSetting }) {
           ))}
         </div>
         <div className="footer-legal">
-          <span>© {new Date().getFullYear()} LIRNEasia. Content licensed CC BY 4.0 unless stated.</span>
+          <span>
+            © {new Date().getFullYear()} LIRNEasia. Content licensed CC BY 4.0 unless stated.
+          </span>
           <Link href="/prototype-notes">Prototype notes</Link>
           <Link href="/sign-in">Editor login</Link>
         </div>

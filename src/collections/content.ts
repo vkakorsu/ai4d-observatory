@@ -28,10 +28,20 @@ const relatedFields: Field[] = [
     admin: { initCollapsed: true },
     fields: [
       { name: 'relatedUseCases', type: 'relationship', relationTo: 'use-cases', hasMany: true },
-      { name: 'relatedPublications', type: 'relationship', relationTo: 'publications', hasMany: true },
+      {
+        name: 'relatedPublications',
+        type: 'relationship',
+        relationTo: 'publications',
+        hasMany: true,
+      },
       { name: 'relatedDatasets', type: 'relationship', relationTo: 'datasets', hasMany: true },
       { name: 'relatedEvents', type: 'relationship', relationTo: 'events', hasMany: true },
-      { name: 'relatedLearning', type: 'relationship', relationTo: 'learning-resources', hasMany: true },
+      {
+        name: 'relatedLearning',
+        type: 'relationship',
+        relationTo: 'learning-resources',
+        hasMany: true,
+      },
     ],
   },
 ]
@@ -39,7 +49,9 @@ const relatedFields: Field[] = [
 const externalLinks: Field = {
   name: 'links',
   type: 'array',
-  admin: { description: 'External links, for example a project site, a repository or press coverage.' },
+  admin: {
+    description: 'External links, for example a project site, a repository or press coverage.',
+  },
   fields: [
     { name: 'label', type: 'text', required: true },
     { name: 'url', type: 'text', required: true },
@@ -83,7 +95,9 @@ export const UseCases: CollectionConfig = {
       name: 'responsibleAiPractices',
       label: 'Responsible AI practices',
       type: 'textarea',
-      admin: { description: 'How safety, rights, sustainability, inclusion and context were handled.' },
+      admin: {
+        description: 'How safety, rights, sustainability, inclusion and context were handled.',
+      },
     },
     {
       name: 'evidenceOfImpact',
@@ -144,7 +158,11 @@ export const Publications: CollectionConfig = {
       relationTo: 'people',
       hasMany: true,
     },
-    { name: 'authorText', type: 'text', admin: { description: 'Use when authors are not in the directory.' } },
+    {
+      name: 'authorText',
+      type: 'text',
+      admin: { description: 'Use when authors are not in the directory.' },
+    },
     { name: 'organisations', type: 'relationship', relationTo: 'organisations', hasMany: true },
     {
       name: 'file',
@@ -152,7 +170,11 @@ export const Publications: CollectionConfig = {
       relationTo: 'media',
       admin: { description: 'PDF or other file. Gating is set on the media item.' },
     },
-    { name: 'externalUrl', type: 'text', admin: { description: 'If the publication lives elsewhere.' } },
+    {
+      name: 'externalUrl',
+      type: 'text',
+      admin: { description: 'If the publication lives elsewhere.' },
+    },
     { name: 'citation', type: 'textarea' },
     { name: 'pages', type: 'number' },
     { name: 'cover', type: 'upload', relationTo: 'media' },
@@ -178,12 +200,21 @@ export const Datasets: CollectionConfig = {
     slugField(),
     summaryField,
     richText('description'),
-    { name: 'source', type: 'text', required: true, admin: { description: 'Who produced the data.' } },
+    {
+      name: 'source',
+      type: 'text',
+      required: true,
+      admin: { description: 'Who produced the data.' },
+    },
     { name: 'methodNotes', type: 'textarea', admin: { description: 'Method, coverage, caveats.' } },
     {
       type: 'row',
       fields: [
-        { name: 'temporalCoverage', type: 'text', admin: { description: 'For example 2020 to 2025.' } },
+        {
+          name: 'temporalCoverage',
+          type: 'text',
+          admin: { description: 'For example 2020 to 2025.' },
+        },
         { name: 'updateFrequency', type: 'text' },
         {
           name: 'licence',
@@ -260,7 +291,12 @@ export const OpEds: CollectionConfig = {
   ...contentCollectionDefaults('Commentary'),
   defaultSort: '-publishedAt',
   fields: articleFields([
-    { name: 'outlet', type: 'text', required: true, admin: { description: 'Where it was published.' } },
+    {
+      name: 'outlet',
+      type: 'text',
+      required: true,
+      admin: { description: 'Where it was published.' },
+    },
     { name: 'externalUrl', type: 'text', required: true },
   ]),
 }
@@ -418,7 +454,17 @@ export const Events: CollectionConfig = {
       ],
     },
     { name: 'venue', type: 'text' },
-    { name: 'onlineUrl', type: 'text', admin: { description: 'Meeting or stream link, shown to registrants.' } },
+    {
+      name: 'onlineUrl',
+      type: 'text',
+      // The join link is not public data. It reaches visitors only after registration, or on the event page
+      // when the event needs no registration. The REST and GraphQL APIs never expose it to anonymous callers.
+      access: { read: ({ req }) => Boolean(req.user) },
+      admin: {
+        description:
+          'Meeting or stream link. Shown after registration, or on the event page when no registration is needed. Never exposed through the public API.',
+      },
+    },
     {
       name: 'registration',
       type: 'group',
@@ -489,7 +535,11 @@ export const LearningResources: CollectionConfig = {
             { label: 'Advanced', value: 'advanced' },
           ],
         },
-        { name: 'duration', type: 'text', admin: { description: 'For example 2 hours or 6 weeks.' } },
+        {
+          name: 'duration',
+          type: 'text',
+          admin: { description: 'For example 2 hours or 6 weeks.' },
+        },
       ],
     },
     { name: 'provider', type: 'text' },
@@ -571,7 +621,11 @@ export const Newsletters: CollectionConfig = {
     summaryField,
     richText('body'),
     { name: 'pdf', type: 'upload', relationTo: 'media' },
-    { name: 'externalUrl', type: 'text', admin: { description: 'Web version hosted by the email provider, if any.' } },
+    {
+      name: 'externalUrl',
+      type: 'text',
+      admin: { description: 'Web version hosted by the email provider, if any.' },
+    },
     {
       name: 'featured',
       type: 'relationship',

@@ -18,13 +18,15 @@ import {
  */
 
 const siteDir = path.resolve(__dirname, '..', 'src', 'app', '(site)')
-const routeFile = (...segments: string[]) => path.join(siteDir, ...segments.filter(Boolean), 'page.tsx')
+const routeFile = (...segments: string[]) =>
+  path.join(siteDir, ...segments.filter(Boolean), 'page.tsx')
 const pathname = (url: string) => url.split('?')[0]
 
 describe('RFP module coverage', () => {
   it('maps every Section 3.1.2 module to at least one content type', () => {
     const covered = contentTypeList.flatMap((t) => t.rfpModule.split('. '))
-    for (const module of RFP_MODULES) expect(covered, `module "${module}" has no content type`).toContain(module)
+    for (const rfpModule of RFP_MODULES)
+      expect(covered, `module "${rfpModule}" has no content type`).toContain(rfpModule)
   })
 
   it('names fourteen modules, matching the RFP', () => {
@@ -41,12 +43,16 @@ describe('registry consistency', () => {
   it('has a Payload collection for every type', async () => {
     const cfg = await config
     const slugs = cfg.collections.map((c) => c.slug)
-    for (const def of contentTypeList) expect(slugs, `no collection "${def.collection}"`).toContain(def.collection)
+    for (const def of contentTypeList)
+      expect(slugs, `no collection "${def.collection}"`).toContain(def.collection)
   })
 
   it('has a detail route on disk for every type', () => {
     for (const def of contentTypeList) {
-      const file = def.collection === 'pages' ? routeFile('[slug]') : routeFile(def.base.replace(/^\//, ''), '[slug]')
+      const file =
+        def.collection === 'pages'
+          ? routeFile('[slug]')
+          : routeFile(def.base.replace(/^\//, ''), '[slug]')
       expect(existsSync(file), `missing detail route ${file}`).toBe(true)
     }
   })
@@ -130,6 +136,8 @@ describe('deploy ignore files', () => {
   it('keeps the Vercel Blob upload handler in the Payload import map', () => {
     const root = path.resolve(__dirname, '..')
     const importMap = readFileSync(path.join(root, 'src/app/(payload)/admin/importMap.js'), 'utf8')
-    expect(importMap).toMatch(/@payloadcms\/storage-vercel-blob\/client#VercelBlobClientUploadHandler/)
+    expect(importMap).toMatch(
+      /@payloadcms\/storage-vercel-blob\/client#VercelBlobClientUploadHandler/,
+    )
   })
 })

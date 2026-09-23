@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
+import Link from '@/components/SmartLink'
 import { Breadcrumbs, PageHeader, PendingBadge, ProvenanceBadge, Section } from '@/components/ui'
 import { SubscribeForm } from '@/components/forms/SubscribeForm'
 import { Icon } from '@/components/Icon'
@@ -19,7 +19,14 @@ export default async function NewsletterPage() {
   const payload = await getPayloadClient()
   const [settings, issues] = await Promise.all([
     getSettings(),
-    payload.find({ collection: 'newsletters', where: { _status: { equals: 'published' } }, sort: '-issueNumber', limit: 100, depth: 0, overrideAccess: false }),
+    payload.find({
+      collection: 'newsletters',
+      where: { _status: { equals: 'published' } },
+      sort: '-issueNumber',
+      limit: 100,
+      depth: 0,
+      overrideAccess: false,
+    }),
   ])
   const show = Boolean(settings.showPrototypeNotices)
   const provider = process.env.NEWSLETTER_PROVIDER || 'local'
@@ -37,8 +44,11 @@ export default async function NewsletterPage() {
             <SubscribeForm consentText={settings.newsletterConsentText} source="newsletter" />
             {show && (
               <p className="tiny muted" style={{ marginTop: 'var(--s-3)', marginBottom: 0 }}>
-                <PendingBadge>Pending client account</PendingBadge> Subscriptions are stored in the CMS
-                {provider === 'local' ? ' and will also sync to the Client’s email service once its credentials are configured.' : ` and synced to ${provider}.`}
+                <PendingBadge>Pending client account</PendingBadge> Subscriptions are stored in the
+                CMS
+                {provider === 'local'
+                  ? ' and will also sync to the Client’s email service once its credentials are configured.'
+                  : ` and synced to ${provider}.`}
               </p>
             )}
           </div>
@@ -57,7 +67,9 @@ export default async function NewsletterPage() {
                 <article className="item">
                   <div className="item__type">
                     <Icon name="mail" size={14} /> Issue {n.issueNumber}
-                    {n.publishedAt && <time dateTime={n.publishedAt}>{formatDate(n.publishedAt)}</time>}
+                    {n.publishedAt && (
+                      <time dateTime={n.publishedAt}>{formatDate(n.publishedAt)}</time>
+                    )}
                     <ProvenanceBadge provenance={n.provenance} show={show} />
                   </div>
                   <h3 className="item__title">

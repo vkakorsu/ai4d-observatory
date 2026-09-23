@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { formatValue, makeScale, NO_DATA, quantileBreaks, RAMP, summarise, toCsv, type ValueRow } from '@/lib/stats'
+import {
+  formatValue,
+  makeScale,
+  NO_DATA,
+  quantileBreaks,
+  RAMP,
+  summarise,
+  summariseStatus,
+  toCsv,
+  type ValueRow,
+} from '@/lib/stats'
 
 /** Indicator statistics and the choropleth scale. */
 
@@ -28,7 +38,9 @@ describe('quantileBreaks', () => {
 describe('makeScale', () => {
   it('uses equal intervals when the indicator declares a range', () => {
     const scale = makeScale([10, 20, 90], 0, 100)
-    expect(scale.breaks.map((b) => Math.round(b * 1000) / 1000)).toEqual([16.667, 33.333, 50, 66.667, 83.333])
+    expect(scale.breaks.map((b) => Math.round(b * 1000) / 1000)).toEqual([
+      16.667, 33.333, 50, 66.667, 83.333,
+    ])
     expect(scale.legend[0].from).toBe(0)
     expect(scale.legend[RAMP.length - 1].to).toBe(100)
   })
@@ -98,13 +110,58 @@ describe('summarise', () => {
 
   it('explains direction when lower is better', () => {
     const text = summarise(rows, 'Gender gap', 2024, 'points', false)
-    expect(text).toContain('Lower values are better for this indicator, so Bangladesh leads and Sri Lanka trails.')
+    expect(text).toContain(
+      'Lower values are better for this indicator, so Bangladesh leads and Sri Lanka trails.',
+    )
   })
 
   it('pluralises missing countries and handles no data at all', () => {
-    const text = summarise([...rows, { country: 'Maldives', iso3: 'MDV', isoNumeric: '462', value: null }], 'X', 2024, 'u')
+    const text = summarise(
+      [...rows, { country: 'Maldives', iso3: 'MDV', isoNumeric: '462', value: null }],
+      'X',
+      2024,
+      'u',
+    )
     expect(text).toContain('2 countries have no data for this year.')
-    expect(summarise(rows.map((r) => ({ ...r, value: null })), 'X', 2024, 'u')).toBe('No values are recorded for X in 2024.')
+    expect(
+      summarise(
+        rows.map((r) => ({ ...r, value: null })),
+        'X',
+        2024,
+        'u',
+      ),
+    ).toBe('No values are recorded for X in 2024.')
+  })
+})
+
+describe('summarise units', () => {
+  it('drops score and count units from the sentence, since the caption states them', () => {
+    const text = summarise(rows, 'Compute access index', 2025, 'score 0 to 100')
+    expect(text).toContain('Highest value Sri Lanka at 66.7.')
+    expect(text).not.toContain('score 0 to 100')
+  })
+})
+
+describe('summariseStatus', () => {
+  const labels = [
+    { code: 0, label: 'None' },
+    { code: 1, label: 'In development' },
+    { code: 2, label: 'Adopted' },
+  ]
+  const status: ValueRow[] = [
+    { country: 'India', iso3: 'IND', isoNumeric: '356', value: 2 },
+    { country: 'Sri Lanka', iso3: 'LKA', isoNumeric: '144', value: 2 },
+    { country: 'Nepal', iso3: 'NPL', isoNumeric: '524', value: 1 },
+    { country: 'Bhutan', iso3: 'BTN', isoNumeric: '064', value: null },
+  ]
+  it('counts countries per status, highest first, and never prints a raw code', () => {
+    const text = summariseStatus(status, 'AI strategy status', 2026, labels)
+    expect(text).toContain('3 of 4 countries have data.')
+    expect(text).toContain('Adopted: 2 countries (India and Sri Lanka).')
+    expect(text).toContain('In development: 1 country (Nepal).')
+    expect(text.indexOf('Adopted')).toBeLessThan(text.indexOf('In development'))
+    expect(text).toContain('1 country has no data for this year.')
+    expect(text).not.toMatch(/at \d+ status/)
   })
 })
 

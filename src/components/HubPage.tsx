@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
+import Link from '@/components/SmartLink'
 import { notFound } from 'next/navigation'
 import type { Where } from 'payload'
 import { Item, ItemList } from './listing'
@@ -20,11 +20,38 @@ import type { Country, Event, Indicator } from '@/payload-types'
 
 export type HubKind = 'countries' | 'topics' | 'enablers' | 'rai-dimensions'
 
-const KIND: Record<HubKind, { kicker: string; field: string; param: string; crumb: string; crumbHref: string }> = {
-  countries: { kicker: 'Country', field: 'countries', param: 'country', crumb: 'Data and maps', crumbHref: '/data' },
-  topics: { kicker: 'Sector', field: 'topics', param: 'topic', crumb: 'Use cases', crumbHref: '/use-cases' },
-  enablers: { kicker: 'Ecosystem enabler', field: 'enablers', param: 'enabler', crumb: 'Data and maps', crumbHref: '/data' },
-  'rai-dimensions': { kicker: 'Responsible AI dimension', field: 'raiDimensions', param: 'dimension', crumb: 'Use cases', crumbHref: '/use-cases' },
+const KIND: Record<
+  HubKind,
+  { kicker: string; field: string; param: string; crumb: string; crumbHref: string }
+> = {
+  countries: {
+    kicker: 'Country',
+    field: 'countries',
+    param: 'country',
+    crumb: 'Data and maps',
+    crumbHref: '/data',
+  },
+  topics: {
+    kicker: 'Sector',
+    field: 'topics',
+    param: 'topic',
+    crumb: 'Use cases',
+    crumbHref: '/use-cases',
+  },
+  enablers: {
+    kicker: 'Ecosystem enabler',
+    field: 'enablers',
+    param: 'enabler',
+    crumb: 'Data and maps',
+    crumbHref: '/data',
+  },
+  'rai-dimensions': {
+    kicker: 'Responsible AI dimension',
+    field: 'raiDimensions',
+    param: 'dimension',
+    crumb: 'Use cases',
+    crumbHref: '/use-cases',
+  },
 }
 
 const GROUPS: Array<{ collection: ContentTypeKey; limit: number }> = [
@@ -67,15 +94,30 @@ export async function HubPage({ kind, slug }: { kind: HubKind; slug: string }) {
   // People carry `expertise` rather than `topics`, and organisations and people have no dimensions.
   const whereFor = (collection: ContentTypeKey): Where | null => {
     if (kind === 'topics' && collection === 'people') return { expertise: { equals: term.id } }
-    if (kind === 'rai-dimensions' && !CONTENT_TYPES[collection].taxonomies.includes('raiDimensions')) return null
+    if (
+      kind === 'rai-dimensions' &&
+      !CONTENT_TYPES[collection].taxonomies.includes('raiDimensions')
+    )
+      return null
     if (kind === 'topics' && collection === 'people') return { expertise: { equals: term.id } }
-    if (!CONTENT_TYPES[collection].taxonomies.includes(kind === 'rai-dimensions' ? 'raiDimensions' : kind)) return null
+    if (
+      !CONTENT_TYPES[collection].taxonomies.includes(
+        kind === 'rai-dimensions' ? 'raiDimensions' : kind,
+      )
+    )
+      return null
     return where
   }
   const applicable = GROUPS.filter((g) => whereFor(g.collection) !== null)
   const counts = Object.fromEntries(
     await Promise.all(
-      applicable.map(async (g) => [g.collection, (await countPublished(payload, [g.collection], whereFor(g.collection)!))[g.collection]] as const),
+      applicable.map(
+        async (g) =>
+          [
+            g.collection,
+            (await countPublished(payload, [g.collection], whereFor(g.collection)!))[g.collection],
+          ] as const,
+      ),
     ),
   ) as Record<ContentTypeKey, number>
   const groups = await Promise.all(
@@ -83,28 +125,66 @@ export async function HubPage({ kind, slug }: { kind: HubKind; slug: string }) {
       .filter((g) => counts[g.collection] > 0)
       .map(async (g) => ({
         ...g,
-        docs: await latest(payload, g.collection, g.limit, whereFor(g.collection)!, g.collection === 'events' ? '-startDate' : g.collection === 'people' || g.collection === 'organisations' ? 'name' : '-publishedAt'),
+        docs: await latest(
+          payload,
+          g.collection,
+          g.limit,
+          whereFor(g.collection)!,
+          g.collection === 'events'
+            ? '-startDate'
+            : g.collection === 'people' || g.collection === 'organisations'
+              ? 'name'
+              : '-publishedAt',
+        ),
       })),
   )
   const total = Object.values(counts).reduce((a, b) => a + b, 0)
 
   // Country hubs. Indicator values for this country, latest year each.
-  let countryData: Array<{ name: string; slug: string; unit: string; value: string; year: number; rank: string }> = []
+  let countryData: Array<{
+    name: string
+    slug: string
+    unit: string
+    value: string
+    year: number
+    rank: string
+  }> = []
   let mapRows: MapRow[] | null = null
   let mapIndicator: Indicator | null = null
   if (kind === 'countries') {
     const c = term as Country
-    const indicators = await payload.find({ collection: 'indicators', limit: 50, sort: 'order', depth: 0 })
+    const indicators = await payload.find({
+      collection: 'indicators',
+      limit: 50,
+      sort: 'order',
+      depth: 0,
+    })
     const rowsPer = await Promise.all(indicators.docs.map((ind) => indicatorRows(payload, ind.id)))
     countryData = indicators.docs
       .map((ind, i) => {
         const data = rowsPer[i]
         const row = data.rows.find((r) => r.iso3 === c.iso3)
         if (!row || row.value === null) return null
-        const ranked = data.rows.filter((r) => r.value !== null).sort((a, b) => ((ind.higherIsBetter ?? true) ? (b.value ?? 0) - (a.value ?? 0) : (a.value ?? 0) - (b.value ?? 0)))
+        const ranked = data.rows
+          .filter((r) => r.value !== null)
+          .sort((a, b) =>
+            (ind.higherIsBetter ?? true)
+              ? (b.value ?? 0) - (a.value ?? 0)
+              : (a.value ?? 0) - (b.value ?? 0),
+          )
         const rank = ranked.findIndex((r) => r.iso3 === c.iso3) + 1
-        const label = ind.valueType === 'status' ? ind.statusLabels?.find((s) => s.code === row.value)?.label ?? String(row.value) : String(row.value)
-        return { name: ind.name, slug: ind.slug ?? '', unit: ind.unit, value: label, year: data.year ?? 0, rank: `${rank} of ${ranked.length}` }
+        const label =
+          ind.valueType === 'status'
+            ? (ind.statusLabels?.find((s) => s.code === row.value)?.label ?? String(row.value))
+            : String(row.value)
+        return {
+          name: ind.name,
+          slug: ind.slug ?? '',
+          unit: ind.unit,
+          value: label,
+          year: data.year ?? 0,
+          rank: `${rank} of ${ranked.length}`,
+        }
       })
       .filter((x): x is NonNullable<typeof x> => x !== null)
     const featured = indicators.docs.find((i) => i.featured) ?? indicators.docs[0]
@@ -127,8 +207,12 @@ export async function HubPage({ kind, slug }: { kind: HubKind; slug: string }) {
             {applicable
               .filter((g) => counts[g.collection] > 0)
               .map((g) => (
-                <Link key={g.collection} href={`${CONTENT_TYPES[g.collection].listing}${CONTENT_TYPES[g.collection].listing.includes('?') ? '&' : '?'}${meta.param}=${slug}`}>
-                  <span className="n">{counts[g.collection]}</span> {CONTENT_TYPES[g.collection].plural}
+                <Link
+                  key={g.collection}
+                  href={`${CONTENT_TYPES[g.collection].listing}${CONTENT_TYPES[g.collection].listing.includes('?') ? '&' : '?'}${meta.param}=${slug}`}
+                >
+                  <span className="n">{counts[g.collection]}</span>{' '}
+                  {CONTENT_TYPES[g.collection].plural}
                 </Link>
               ))}
           </div>
@@ -136,13 +220,18 @@ export async function HubPage({ kind, slug }: { kind: HubKind; slug: string }) {
       />
       {show && kind !== 'countries' && (
         <p className="small">
-          <PendingBadge>Pending confirmation</PendingBadge> This taxonomy is seeded from the Observatory’s public description and will be
-          confirmed with the Client. Terms are editable in the CMS.
+          <PendingBadge>Pending confirmation</PendingBadge> This taxonomy is seeded from the
+          Observatory’s public description and will be confirmed with the Client. Terms are editable
+          in the CMS.
         </p>
       )}
 
       {kind === 'countries' && (
-        <Section title="Indicators" id="indicators" more={{ href: '/data', label: 'All data and maps' }}>
+        <Section
+          title="Indicators"
+          id="indicators"
+          more={{ href: '/data', label: 'All data and maps' }}
+        >
           {countryData.length === 0 ? (
             <p className="muted">No indicator values recorded for {term.name} yet.</p>
           ) : (
@@ -176,7 +265,15 @@ export async function HubPage({ kind, slug }: { kind: HubKind; slug: string }) {
                   </tbody>
                 </table>
               </div>
-              {mapIndicator && mapRows && <RegionMap rows={mapRows} indicator={mapIndicator} year={countryData[0]?.year ?? ''} compact id="hub-map" />}
+              {mapIndicator && mapRows && (
+                <RegionMap
+                  rows={mapRows}
+                  indicator={mapIndicator}
+                  year={countryData[0]?.year ?? ''}
+                  compact
+                  id="hub-map"
+                />
+              )}
             </div>
           )}
         </Section>
@@ -185,7 +282,10 @@ export async function HubPage({ kind, slug }: { kind: HubKind; slug: string }) {
       {total === 0 && (
         <div className="empty" style={{ marginTop: 'var(--s-6)' }}>
           <h2>Nothing tagged yet</h2>
-          <p>No published content carries this term. Editors tag content from the sidebar of any item in the CMS.</p>
+          <p>
+            No published content carries this term. Editors tag content from the sidebar of any item
+            in the CMS.
+          </p>
         </div>
       )}
 
@@ -196,7 +296,10 @@ export async function HubPage({ kind, slug }: { kind: HubKind; slug: string }) {
           title={CONTENT_TYPES[g.collection].plural}
           more={
             counts[g.collection] > g.limit
-              ? { href: `${CONTENT_TYPES[g.collection].listing}${CONTENT_TYPES[g.collection].listing.includes('?') ? '&' : '?'}${meta.param}=${slug}`, label: `All ${counts[g.collection]}` }
+              ? {
+                  href: `${CONTENT_TYPES[g.collection].listing}${CONTENT_TYPES[g.collection].listing.includes('?') ? '&' : '?'}${meta.param}=${slug}`,
+                  label: `All ${counts[g.collection]}`,
+                }
               : undefined
           }
         >
@@ -208,7 +311,13 @@ export async function HubPage({ kind, slug }: { kind: HubKind; slug: string }) {
           ) : g.collection === 'people' || g.collection === 'organisations' ? (
             <ul className="related-list">
               {g.docs.map((d) => {
-                const doc = d as { id: string; name: string; slug: string; role?: string; summary?: string }
+                const doc = d as {
+                  id: string
+                  name: string
+                  slug: string
+                  role?: string
+                  summary?: string
+                }
                 return (
                   <li key={doc.id}>
                     <Link href={`/${g.collection}/${doc.slug}`}>{doc.name}</Link>

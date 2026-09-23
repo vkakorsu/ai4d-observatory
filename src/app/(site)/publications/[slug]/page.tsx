@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { isPlaceholderImage, ReportCover } from '@/components/ArtCover'
 import { DetailPage } from '@/components/DetailPage'
 import { RichText } from '@/components/RichText'
 import { DownloadBox, OrgLinks, PeopleLinks, RelatedList } from '@/components/content'
@@ -19,7 +20,12 @@ export const revalidate = 60
 
 export async function generateStaticParams() {
   const payload = await getPayloadClient()
-  const res = await payload.find({ collection: 'publications', limit: 500, depth: 0, where: { _status: { equals: 'published' } } })
+  const res = await payload.find({
+    collection: 'publications',
+    limit: 500,
+    depth: 0,
+    where: { _status: { equals: 'published' } },
+  })
   return res.docs.map((d) => ({ slug: d.slug ?? '' })).filter((p) => p.slug)
 }
 
@@ -41,10 +47,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function PublicationPage({ params }: Props) {
   const { slug } = await params
   const payload = await getPayloadClient()
-  const [doc, settings] = await Promise.all([findBySlug<Publication>(payload, 'publications', slug, 2), getSettings()])
+  const [doc, settings] = await Promise.all([
+    findBySlug<Publication>(payload, 'publications', slug, 2),
+    getSettings(),
+  ])
   if (!doc) notFound()
   const show = Boolean(settings.showPrototypeNotices)
-  const related = await relatedContent(payload, doc as unknown as Record<string, unknown>, { collection: 'publications', id: doc.id })
+  const related = await relatedContent(payload, doc as unknown as Record<string, unknown>, {
+    collection: 'publications',
+    id: doc.id,
+  })
   const typeLabel = publicationTypes.find((t) => t.value === doc.type)?.label ?? 'Publication'
   const authors = Array.isArray(doc.authors) ? doc.authors.filter((a) => typeof a === 'object') : []
   const authorNames = authors.map((a) => (a as { name: string }).name)
@@ -53,6 +65,8 @@ export default async function PublicationPage({ params }: Props) {
 
   return (
     <DetailPage
+      path={path}
+      citation={doc.citation}
       crumbs={[{ href: '/publications', label: 'Publications' }, { label: doc.title }]}
       type={typeLabel}
       title={doc.title}
@@ -63,14 +77,46 @@ export default async function PublicationPage({ params }: Props) {
       doc={doc as unknown as Record<string, unknown>}
       aside={
         <>
-          <DownloadBox file={doc.file} resourceTitle={doc.title} resourceUrl={path} consentText={settings.downloadConsentText} />
+          {(() => {
+            const cover = typeof doc.cover === 'object' ? doc.cover : null
+            return cover && !isPlaceholderImage(cover) ? (
+              // eslint-disable-next-line @next/next/no-img-element -- CMS media, resized on upload
+              <img
+                className="pub-cover"
+                src={cover.sizes?.card?.url ?? cover.url ?? ''}
+                alt={cover.alt ?? ''}
+                width={300}
+                height={400}
+              />
+            ) : (
+              <ReportCover
+                className="pub-cover"
+                seed={`publications:${slug}`}
+                kind={doc.type}
+                label={typeLabel}
+                title={doc.title}
+              />
+            )
+          })()}
+          <DownloadBox
+            file={doc.file}
+            resourceTitle={doc.title}
+            resourceUrl={path}
+            consentText={settings.downloadConsentText}
+          />
           {doc.externalUrl && (
             <div className="download-box">
               <h2>
                 <Icon name="external" size={16} /> Read externally
               </h2>
               <p className="filemeta">Hosted by the publisher</p>
-              <TrackLink className="btn" href={doc.externalUrl} event="outbound_publication" data={{ resource: doc.title }} rel="noopener noreferrer">
+              <TrackLink
+                className="btn"
+                href={doc.externalUrl}
+                event="outbound_publication"
+                data={{ resource: doc.title }}
+                rel="noopener noreferrer"
+              >
                 Open publication <Icon name="external" size={14} />
               </TrackLink>
             </div>
@@ -81,9 +127,16 @@ export default async function PublicationPage({ params }: Props) {
                 label: 'Authors',
                 value: authors.length ? <PeopleLinks people={authors} /> : doc.authorText,
               },
-              Array.isArray(doc.organisations) && doc.organisations.length > 0 && { label: 'Organisations', value: <OrgLinks orgs={doc.organisations} /> },
+              Array.isArray(doc.organisations) &&
+                doc.organisations.length > 0 && {
+                  label: 'Organisations',
+                  value: <OrgLinks orgs={doc.organisations} />,
+                },
               doc.pages && { label: 'Pages', value: doc.pages },
-              doc.citation && { label: 'Cite as', value: <span className="tiny">{doc.citation}</span> },
+              doc.citation && {
+                label: 'Cite as',
+                value: <span className="tiny">{doc.citation}</span>,
+              },
             ]}
           />
           <RelatedList items={related} />
@@ -107,7 +160,8 @@ export default async function PublicationPage({ params }: Props) {
       )}
       {doc.externalUrl && !doc.file && (
         <p className="small">
-          This publication is hosted elsewhere. <ExternalLink href={doc.externalUrl}>Read it at the source</ExternalLink>.
+          This publication is hosted elsewhere.{' '}
+          <ExternalLink href={doc.externalUrl}>Read it at the source</ExternalLink>.
         </p>
       )}
     </DetailPage>

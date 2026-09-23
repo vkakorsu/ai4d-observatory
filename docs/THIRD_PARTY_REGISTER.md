@@ -7,14 +7,15 @@ Required by Sections 3.1.5 (e), 3.1.8 (b) and 3.2 ("third-party service/licence 
 | Component | Version | Licence | Purpose | Recurring cost | Ownership and lock-in |
 |---|---|---|---|---|---|
 | Node.js | 22 LTS | MIT | Runtime | None | Open source |
-| Next.js, React | 15.4 / 19.2 | MIT | Web framework, server rendering, image pipeline | None | Open source |
+| Next.js, React | 16.3.6 / 19.2 | MIT | Web framework, server rendering, server actions, share-card images | None | Open source. 16.3 is the Active LTS line; 16.3.6 includes the May, August and September 2026 security releases |
 | Payload CMS and first-party packages (`payload`, `@payloadcms/next`, `@payloadcms/ui`, `@payloadcms/richtext-lexical`, `@payloadcms/db-postgres`, `@payloadcms/db-sqlite`, `@payloadcms/plugin-search`, `@payloadcms/plugin-import-export`, `@payloadcms/storage-vercel-blob`) | 3.90 | MIT | Content management, admin dashboard, access control, versions, search index, CSV/JSON export, media storage adapter | None | Open source. Payload has been part of Figma since June 2025 and remains MIT licensed. Content lives in the Client's PostgreSQL database and is exportable with the included scripts |
 | Drizzle ORM (via Payload) | bundled | Apache 2.0 | Database access and migrations | None | Open source |
 | PostgreSQL | 16 | PostgreSQL licence | Production database | None | Open source, standard SQL dumps |
 | libSQL / SQLite | via `@payloadcms/db-sqlite` | MIT / public domain | Development and evaluation database | None | Open source |
 | d3-geo, topojson-client | 3.1 / 3.1 | ISC | Server-rendered SVG maps | None | Open source |
 | world-atlas (Natural Earth boundaries) | 2.0.2 | ISC (code), public domain (data) | Country boundaries | None | Public domain data |
-| sharp | 0.35 | Apache 2.0 | Image resizing and AVIF/WebP encoding | None | Open source |
+| sharp | 0.35 | Apache 2.0 | WebP renditions generated at upload (AVIF off pending the libheif advisory GHSA-2xp9-vwfh-vxw4) | None | Open source |
+| @vercel/blob | 2.3 | Apache 2.0 | Reads gated files from Blob storage on the evaluation host only | None | Used only when `MEDIA_STORAGE=vercel-blob`; production uses local disk or S3 |
 | Newsreader, IBM Plex Sans, IBM Plex Mono (via `@fontsource`) | 5.3 | SIL Open Font Licence 1.1 | Typography, self-hosted | None | Open source, no external requests |
 | Caddy | 2 | Apache 2.0 | Reverse proxy, automatic TLS, HTTP/2, compression | None | Open source |
 | Umami (optional, self-hosted) | 2 | MIT | Cookieless analytics on the Client's server | None | Open source, data stays on the Client's server |
@@ -23,6 +24,17 @@ Required by Sections 3.1.5 (e), 3.1.8 (b) and 3.2 ("third-party service/licence 
 | axe-core, jsdom (development only) | see `package.json` | MPL-2.0 (axe-core), MIT (jsdom) | Automated accessibility sweep (`pnpm a11y`) | None | Development tooling, not deployed |
 
 No proprietary plugin, theme, paid library or component licensed to the consortium rather than the Client is used.
+
+### Known advisories accepted at the time of writing (23 September 2026)
+
+`pnpm audit --prod` reports no high or critical advisories; CI fails the build if one appears. Two moderate advisories remain in transitive dependencies and are reviewed at every monthly update:
+
+| Package | Reached through | Advisory | Why it is accepted for now |
+|---|---|---|---|
+| csv-parse 5.6 | `@payloadcms/plugin-import-export` | Prototype replacement via the `columns` option (fixed in 7.0.2) | Import is available only to signed-in editors and is switched off for the sign-up records. The fix is two major versions ahead of the version Payload pins, so it waits for Payload to move |
+| esbuild 0.18 | Payload's migration tooling (`drizzle-kit`) | A development server can be reached cross-origin | The development server is never run in production. Migrations run as a one-off command |
+
+`dompurify` inside the admin editor is pinned forward with a pnpm override (`package.json`), which clears four further advisories.
 
 ## Services the Client may choose to connect
 

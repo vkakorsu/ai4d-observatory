@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from '@/components/SmartLink'
 
 /**
  * Typographic wordmark. Three offset squares echo LIRNEasia's node motif without copying it.

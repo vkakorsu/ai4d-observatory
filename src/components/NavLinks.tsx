@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import Link from '@/components/SmartLink'
 import { usePathname } from 'next/navigation'
 import { Icon } from './Icon'
 
@@ -10,7 +10,11 @@ export const NAV = [
   { href: '/publications', label: 'Publications' },
   { href: '/commentary', label: 'Commentary' },
   { href: '/directory', label: 'Directory' },
-  { href: '/events', label: 'Engage', match: ['/events', '/learning', '/opportunities', '/newsletter'] },
+  {
+    href: '/events',
+    label: 'Engage',
+    match: ['/events', '/learning', '/opportunities', '/newsletter'],
+  },
   { href: '/about', label: 'About' },
 ]
 

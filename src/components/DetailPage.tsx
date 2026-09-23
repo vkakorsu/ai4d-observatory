@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Breadcrumbs, ProvenanceBadge, TaxChips } from './ui'
-import { formatDate } from '@/lib/format'
+import { absoluteUrl, formatDate } from '@/lib/format'
+import { ShareBar } from './ShareBar'
 
 /**
  * Shared frame for content detail pages. Eight-column article, four-column metadata rail.
@@ -18,7 +19,13 @@ export function DetailPage({
   children,
   aside,
   before,
+  path,
+  citation,
 }: {
+  /** Public path of this item, for sharing. */
+  path?: string
+  /** Formatted citation, offered as "Copy citation". */
+  citation?: string | null
   crumbs: Array<{ href?: string; label: string }>
   type: string
   title: string
@@ -43,7 +50,15 @@ export function DetailPage({
               <span aria-hidden="true" style={{ color: 'var(--ink-32)' }}>
                 ·
               </span>
-              <time dateTime={date} style={{ color: 'var(--ink-56)', fontWeight: 500, letterSpacing: 0, textTransform: 'none' }}>
+              <time
+                dateTime={date}
+                style={{
+                  color: 'var(--ink-56)',
+                  fontWeight: 500,
+                  letterSpacing: 0,
+                  textTransform: 'none',
+                }}
+              >
                 {formatDate(date)}
               </time>
             </>
@@ -55,6 +70,7 @@ export function DetailPage({
         <div style={{ marginTop: 'var(--s-4)' }}>
           <TaxChips doc={doc} />
         </div>
+        {path && <ShareBar url={absoluteUrl(path)} title={title} citation={citation} />}
       </header>
       {before}
       <div className="detail">

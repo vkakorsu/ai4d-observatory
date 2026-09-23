@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from '@/components/SmartLink'
 import { Icon } from '@/components/Icon'
 
 export default function NotFound() {
@@ -8,9 +8,16 @@ export default function NotFound() {
         <p className="code">404</p>
         <h1>This page is not in the repository</h1>
         <p className="lede" style={{ fontSize: 'var(--step-2)' }}>
-          The address may be mistyped, or the item may have been archived. Archived items are kept in the CMS and can be restored by an editor.
+          The address may be mistyped, or the item may have been archived. Archived items are kept
+          in the CMS and can be restored by an editor.
         </p>
-        <form className="search-form" role="search" method="get" action="/search" style={{ marginTop: 'var(--s-5)' }}>
+        <form
+          className="search-form"
+          role="search"
+          method="get"
+          action="/search"
+          style={{ marginTop: 'var(--s-5)' }}
+        >
           <label htmlFor="nf-q" className="visually-hidden">
             Search
           </label>
@@ -20,8 +27,9 @@ export default function NotFound() {
           </button>
         </form>
         <p className="small" style={{ marginTop: 'var(--s-5)' }}>
-          Or start from <Link href="/use-cases">use cases</Link>, <Link href="/publications">publications</Link>, <Link href="/data">data and maps</Link> or the{' '}
-          <Link href="/">home page</Link>.
+          Or start from <Link href="/use-cases">use cases</Link>,{' '}
+          <Link href="/publications">publications</Link>, <Link href="/data">data and maps</Link> or
+          the <Link href="/">home page</Link>.
         </p>
       </div>
     </div>

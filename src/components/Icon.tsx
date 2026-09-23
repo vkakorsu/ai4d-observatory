@@ -22,6 +22,8 @@ export type IconName =
   | 'pin'
   | 'video'
   | 'book'
+  | 'link'
+  | 'quote'
 
 const paths: Record<IconName, React.ReactNode> = {
   search: (
@@ -31,6 +33,12 @@ const paths: Record<IconName, React.ReactNode> = {
     </>
   ),
   arrow: <path d="M4 10h12M11 5l5 5-5 5" />,
+  link: (
+    <path d="M8.5 11.5a3 3 0 004.2 0l2.6-2.6a3 3 0 00-4.2-4.2l-1 1M11.5 8.5a3 3 0 00-4.2 0l-2.6 2.6a3 3 0 004.2 4.2l1-1" />
+  ),
+  quote: (
+    <path d="M4 15v-3.5C4 8.5 5.5 6 8 5M11 15v-3.5c0-3 1.5-5.5 4-6.5M4 11.5h3.5V15H4M11 11.5h3.5V15H11" />
+  ),
   download: <path d="M10 3v10M6 9l4 4 4-4M4 16h12" />,
   external: <path d="M8 4H4v12h12v-4M11 3h6v6M17 3l-8 8" />,
   calendar: (

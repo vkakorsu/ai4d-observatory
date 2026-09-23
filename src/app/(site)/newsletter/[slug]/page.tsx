@@ -17,7 +17,12 @@ export const revalidate = 60
 
 export async function generateStaticParams() {
   const payload = await getPayloadClient()
-  const res = await payload.find({ collection: 'newsletters', limit: 500, depth: 0, where: { _status: { equals: 'published' } } })
+  const res = await payload.find({
+    collection: 'newsletters',
+    limit: 500,
+    depth: 0,
+    where: { _status: { equals: 'published' } },
+  })
   return res.docs.map((d) => ({ slug: d.slug ?? '' })).filter((p) => p.slug)
 }
 
@@ -25,13 +30,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const doc = await findBySlug<Newsletter>(await getPayloadClient(), 'newsletters', slug, 0)
   if (!doc) return {}
-  return buildMetadata({ title: doc.title, description: doc.summary, path: `/newsletter/${slug}`, seo: doc.seo })
+  return buildMetadata({
+    title: doc.title,
+    description: doc.summary,
+    path: `/newsletter/${slug}`,
+    seo: doc.seo,
+  })
 }
 
 export default async function NewsletterIssuePage({ params }: Props) {
   const { slug } = await params
   const payload = await getPayloadClient()
-  const [doc, settings] = await Promise.all([findBySlug<Newsletter>(payload, 'newsletters', slug, 2), getSettings()])
+  const [doc, settings] = await Promise.all([
+    findBySlug<Newsletter>(payload, 'newsletters', slug, 2),
+    getSettings(),
+  ])
   if (!doc) notFound()
   const show = Boolean(settings.showPrototypeNotices)
   const featured = ((doc.featured ?? []) as Array<{ relationTo: ContentTypeKey; value: unknown }>)
@@ -40,6 +53,7 @@ export default async function NewsletterIssuePage({ params }: Props) {
 
   return (
     <DetailPage
+      path={`/newsletter/${slug}`}
       crumbs={[{ href: '/newsletter', label: 'Newsletter' }, { label: `Issue ${doc.issueNumber}` }]}
       type={`Newsletter · Issue ${doc.issueNumber}`}
       title={doc.title}
@@ -50,12 +64,29 @@ export default async function NewsletterIssuePage({ params }: Props) {
       doc={doc as unknown as Record<string, unknown>}
       aside={
         <>
-          <DownloadBox file={doc.pdf} resourceTitle={doc.title} resourceUrl={`/newsletter/${slug}`} consentText={settings.downloadConsentText} label="PDF version" />
-          <MetaList items={[doc.externalUrl && { label: 'Web version', value: <ExternalLink href={doc.externalUrl}>View in browser</ExternalLink> }]} />
+          <DownloadBox
+            file={doc.pdf}
+            resourceTitle={doc.title}
+            resourceUrl={`/newsletter/${slug}`}
+            consentText={settings.downloadConsentText}
+            label="PDF version"
+          />
+          <MetaList
+            items={[
+              doc.externalUrl && {
+                label: 'Web version',
+                value: <ExternalLink href={doc.externalUrl}>View in browser</ExternalLink>,
+              },
+            ]}
+          />
           <RelatedList items={featured} title="In this issue" />
           <div className="panel panel--tint">
             <h2 style={{ fontSize: 'var(--step-2)' }}>Get the next issue</h2>
-            <SubscribeForm compact consentText={settings.newsletterConsentText} source={`newsletter/${slug}`} />
+            <SubscribeForm
+              compact
+              consentText={settings.newsletterConsentText}
+              source={`newsletter/${slug}`}
+            />
           </div>
         </>
       }
