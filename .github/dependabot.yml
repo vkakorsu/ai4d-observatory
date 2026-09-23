@@ -18,3 +18,8 @@ updates:
   - package-ecosystem: docker
     directory: /
     schedule: { interval: monthly }
+    # The runtime stays on an LTS line (the proposal commits to Node 22 LTS). Major moves, 22 to 24 and later,
+    # are planned deliberately on staging; odd-numbered "Current" releases are never used in production.
+    ignore:
+      - dependency-name: node
+        update-types: ['version-update:semver-major']
