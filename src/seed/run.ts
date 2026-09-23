@@ -214,6 +214,29 @@ const seedTaxonomies = async (payload: Payload) => {
 
 /* ---------------------------------------------------------------- media */
 
+/**
+ * Find a seeded file by its intended name. Storage renames a file on collision (`cover-x.svg` becomes
+ * `cover-x-1.svg`), so an exact match missed it and every re-seed uploaded another copy. This matches the
+ * name with or without a numeric suffix and prefers the most recent, so re-seeding is idempotent.
+ */
+const findMedia = async (payload: Payload, name: string) => {
+  const dot = name.lastIndexOf('.')
+  const stem = dot > 0 ? name.slice(0, dot) : name
+  const ext = dot > 0 ? name.slice(dot) : ''
+  const res = await payload.find({
+    collection: 'media',
+    where: { filename: { like: stem } },
+    sort: '-createdAt',
+    limit: 50,
+    depth: 0,
+    overrideAccess: true,
+    pagination: false,
+  })
+  const escape = (x: string) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const pattern = new RegExp(`^${escape(stem)}(-\\d+)?${escape(ext)}$`)
+  return res.docs.find((d) => pattern.test(String(d.filename ?? ''))) ?? null
+}
+
 type FileSpec = { name: string; gated?: boolean; title: string; kind?: 'pdf' | 'csv' }
 
 const mimeFor = (name: string) =>
@@ -222,7 +245,7 @@ const mimeFor = (name: string) =>
 /** Upload a generated sample file unless a media item with this filename already exists. */
 const upsertFile = async (payload: Payload, spec: FileSpec, lines: string[] = []): Promise<Id> => {
   if (reg.has('media', spec.name)) return reg.get('media', spec.name)
-  const existing = await findOne(payload, 'media', { filename: { equals: spec.name } })
+  const existing = await findMedia(payload, spec.name)
   const data = {
     alt: spec.title,
     access: spec.gated ? ('gated' as const) : ('open' as const),
@@ -260,7 +283,7 @@ const upsertCover = async (
 ): Promise<Id> => {
   const name = `cover-${slug}.svg`
   if (reg.has('media', name)) return reg.get('media', name)
-  const existing = await findOne(payload, 'media', { filename: { equals: name } })
+  const existing = await findMedia(payload, name)
   const data = {
     alt: `${label}. ${title}`,
     access: 'open' as const,
