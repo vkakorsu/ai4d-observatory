@@ -11,7 +11,7 @@
 # production credentials are needed at build time. NEXT_PUBLIC_* values are inlined at build
 # time and must be passed as build arguments. Everything else is read at runtime, see .env.example.
 
-FROM node:22-alpine AS base
+FROM node:25-alpine AS base
 ENV PNPM_HOME=/pnpm
 ENV PATH=$PNPM_HOME:$PATH
 RUN apk add --no-cache libc6-compat && npm install -g pnpm@10
