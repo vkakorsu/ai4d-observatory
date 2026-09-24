@@ -12,7 +12,11 @@ import { head } from '@vercel/blob'
  */
 export type StoredFile = { body: ReadableStream; size?: number }
 
-export const MEDIA_DIR = path.resolve(process.cwd(), process.env.MEDIA_DIR || 'media')
+// Uploads arrive at run time, so the bundler must not trace this folder into the server build.
+export const MEDIA_DIR = path.resolve(
+  /*turbopackIgnore: true*/ process.cwd(),
+  process.env.MEDIA_DIR || 'media',
+)
 
 export async function readStoredFile(filename: string): Promise<StoredFile | null> {
   // Never let a stored filename escape the media directory.
@@ -30,7 +34,7 @@ export async function readStoredFile(filename: string): Promise<StoredFile | nul
     }
   }
 
-  const filePath = path.join(MEDIA_DIR, safe)
+  const filePath = path.join(/*turbopackIgnore: true*/ MEDIA_DIR, safe)
   if (!existsSync(filePath)) return null
   return {
     body: Readable.toWeb(createReadStream(filePath)) as ReadableStream,
