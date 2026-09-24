@@ -6,7 +6,7 @@ import { gateAction } from '@/app/(site)/actions'
 import { Icon } from '../Icon'
 import { track } from '../Analytics'
 import { FieldError, Honeypot, useTrackOnce } from './shared'
-import { formatFileSize } from '@/lib/format'
+import { fileKind, formatFileSize } from '@/lib/format'
 
 /**
  * Email-gated download (Section 3.1.2). Collects an email address and consent, records the request server-side,
@@ -42,7 +42,7 @@ export function GateForm({
         <Icon name="lock" size={16} /> Download
       </h2>
       <p className="filemeta">
-        {filename ?? 'File'}
+        {fileKind(filename)}
         {sizeLabel ? ` · ${sizeLabel}` : ''} · email required
       </p>
       {state.status === 'done' ? (
@@ -55,7 +55,7 @@ export function GateForm({
             href={state.url}
             onClick={() => track('download', { resource: resourceTitle, gated: true })}
           >
-            <Icon name="download" size={16} /> Download {state.filename ?? 'file'}
+            <Icon name="download" size={16} /> Download {fileKind(state.filename)}
           </a>
         </div>
       ) : (

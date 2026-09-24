@@ -65,3 +65,26 @@ export const truncate = (s: string | null | undefined, n = 160) => {
   if (s.length <= n) return s
   return `${s.slice(0, n - 1).replace(/\s+\S*$/, '')}…`
 }
+
+/** "PDF", "CSV", "XLSX"... from a stored filename, for display instead of the storage name. */
+export const fileKind = (filename?: string | null): string => {
+  const ext = (filename ?? '').split('.').pop() ?? ''
+  return ext && ext !== filename ? ext.toUpperCase() : 'File'
+}
+
+/**
+ * A readable download name from the item's title. Storage may have renamed the file on upload
+ * (`mapping-study-data-enabler-3.pdf`); readers should get `mapping-the-data-enabler-for-responsible-ai.pdf`.
+ */
+export const downloadName = (title: string, filename?: string | null): string => {
+  const ext = (filename ?? '').includes('.') ? `.${(filename ?? '').split('.').pop()}` : ''
+  const base = title
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80)
+    .replace(/-+$/, '')
+  return `${base || 'download'}${ext.toLowerCase()}`
+}

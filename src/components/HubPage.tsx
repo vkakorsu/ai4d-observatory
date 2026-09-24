@@ -236,7 +236,7 @@ export async function HubPage({ kind, slug }: { kind: HubKind; slug: string }) {
             <p className="muted">No indicator values recorded for {term.name} yet.</p>
           ) : (
             <div className="lead-grid">
-              <div className="table-wrap">
+              <div className="table-wrap" tabIndex={0} role="region" aria-label="Indicators table">
                 <table>
                   <caption className="visually-hidden">Indicator values for {term.name}</caption>
                   <thead>

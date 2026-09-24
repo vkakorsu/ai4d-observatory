@@ -2,6 +2,7 @@ import { type NextRequest } from 'next/server'
 import { getPayloadClient } from '@/lib/payload'
 import { verifyGateToken } from '@/lib/gate'
 import { attachmentHeader, readStoredFile } from '@/lib/media-files'
+import { downloadName } from '@/lib/format'
 
 /**
  * Serves an email-gated file after the form has been completed (Section 3.1.2).
@@ -34,7 +35,8 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
 
   const headers: Record<string, string> = {
     'content-type': file.mimeType ?? 'application/octet-stream',
-    'content-disposition': attachmentHeader(file.filename),
+    // Named after the resource, not the storage name, which may carry an upload suffix.
+    'content-disposition': attachmentHeader(downloadName(file.alt || file.filename, file.filename)),
     'cache-control': 'private, no-store',
     'x-robots-tag': 'noindex',
     'x-content-type-options': 'nosniff',

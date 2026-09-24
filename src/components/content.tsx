@@ -6,7 +6,7 @@ import { TrackLink } from './TrackLink'
 import { CONTENT_TYPES, pathFor, type ContentTypeKey } from '@/lib/content-types'
 import { typeLabelFor } from './listing'
 import type { MetaItem } from './ui'
-import { formatDate, formatFileSize } from '@/lib/format'
+import { downloadName, fileKind, formatDate, formatFileSize } from '@/lib/format'
 
 /* Components used by detail pages. */
 
@@ -48,7 +48,7 @@ export function DownloadBox({
         <Icon name="download" size={16} /> {label}
       </h2>
       <p className="filemeta">
-        {file.filename}
+        {fileKind(file.filename)}
         {sizeLabel ? ` · ${sizeLabel}` : ''} · open access
       </p>
       <TrackLink
@@ -56,7 +56,7 @@ export function DownloadBox({
         href={file.url}
         event="download"
         data={{ resource: resourceTitle, gated: false }}
-        download
+        download={downloadName(resourceTitle, file.filename)}
       >
         <Icon name="download" size={16} /> Download{' '}
         {file.mimeType === 'application/pdf' ? 'PDF' : 'file'}

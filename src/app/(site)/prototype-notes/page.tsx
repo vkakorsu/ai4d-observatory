@@ -136,7 +136,12 @@ export default async function PrototypeNotesPage() {
       </Section>
 
       <Section title="Live configuration" id="config">
-        <div className="table-wrap">
+        <div
+          className="table-wrap"
+          tabIndex={0}
+          role="region"
+          aria-label="Live configuration table"
+        >
           <table className="status-table">
             <thead>
               <tr>
@@ -222,7 +227,7 @@ export default async function PrototypeNotesPage() {
       </Section>
 
       <Section title="Module coverage against Section 3.1.2 of the RFP" id="modules">
-        <div className="table-wrap">
+        <div className="table-wrap" tabIndex={0} role="region" aria-label="Module coverage table">
           <table className="status-table">
             <thead>
               <tr>

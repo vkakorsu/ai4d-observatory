@@ -466,7 +466,7 @@ a.stat:hover .stat__l {
 }
 .hero-search:focus-within {
   border-color: var(--ink);
-  box-shadow: 0 0 0 3px var(--accent-tint);
+  box-shadow: 0 0 0 2px var(--ink);
 }
 .hero-search input {
   flex: 1;
@@ -1304,9 +1304,10 @@ a.chip:hover {
   align-items: flex-start;
 }
 .field--check input {
-  width: 1.15rem;
-  height: 1.15rem;
-  margin-top: 0.2rem;
+  /* 24px minimum target (WCAG 2.2 AA, 2.5.8). */
+  width: 24px;
+  height: 24px;
+  margin-top: 0;
   flex: none;
   accent-color: var(--accent);
 }
@@ -1588,6 +1589,13 @@ a.chip:hover {
   stroke: var(--ink);
   stroke-width: 1.6;
 }
+/* Keyboard focus is stronger than hover: a thick vermilion outline that reads against every ramp colour. */
+.map-figure a.country-link:focus-visible path,
+.map-figure a.country-link:focus-visible circle {
+  stroke: var(--accent);
+  stroke-width: 3.5;
+  paint-order: stroke;
+}
 /* Hovering one country quietens the rest, so the eye finds it. CSS only. */
 .map-figure svg:has(a.country-link:hover) path.country {
   opacity: 0.6;
@@ -1683,7 +1691,22 @@ a.chip:hover {
 .table-wrap {
   overflow-x: auto;
   border: var(--rule);
-  background: var(--surface);
+  /* Scroll shadows: a soft edge appears on whichever side has more table to reveal, so a phone reader can see
+     that the table scrolls sideways. The white layers travel with the content and hide the shadow at each end. */
+  background:
+    linear-gradient(to right, var(--surface) 30%, rgb(255 255 255 / 0)) left / 2.5rem 100% no-repeat
+      local,
+    linear-gradient(to left, var(--surface) 30%, rgb(255 255 255 / 0)) right / 2.5rem 100% no-repeat
+      local,
+    radial-gradient(farthest-side at 0 50%, rgb(0 0 0 / 0.14), transparent) left / 0.9rem 100%
+      no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, rgb(0 0 0 / 0.14), transparent) right / 0.9rem 100%
+      no-repeat scroll,
+    var(--surface);
+}
+.table-wrap:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
 }
 .table-wrap table {
   margin: 0;
@@ -1834,11 +1857,14 @@ a.chip:hover {
   }
 }
 .pcard {
+  /* Grid items default to min-width: auto, so one long word ("Commonwealth") pushed a card past a phone's edge. */
+  min-width: 0;
+  overflow-wrap: anywhere;
   background: var(--surface);
   border: var(--rule);
   padding: var(--s-4);
   display: grid;
-  grid-template-columns: 3.25rem 1fr;
+  grid-template-columns: 3.25rem minmax(0, 1fr);
   gap: var(--s-3);
   align-items: start;
   text-decoration: none;

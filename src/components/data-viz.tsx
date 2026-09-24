@@ -234,7 +234,7 @@ export function DataTable({
   const max = typeof indicator.max === 'number' ? indicator.max : Math.max(...values, 1)
   return (
     <div>
-      <div className="table-wrap">
+      <div className="table-wrap" tabIndex={0} role="region" aria-label={`${indicator.name} table`}>
         <table>
           <caption className="visually-hidden">{`${indicator.name} by country. Unit ${indicator.unit}.`}</caption>
           <thead>
