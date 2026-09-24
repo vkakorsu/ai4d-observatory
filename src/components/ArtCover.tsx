@@ -190,6 +190,11 @@ export function MosaicCover({
       rects.push({ x, y, fill: RAMP[level] })
     }
   }
+  const byFill = new Map<string, string>()
+  for (const q of rects) {
+    const sq = `M${q.x * size + 1} ${q.y * size + 1}h${size - 2}v${size - 2}h-${size - 2}z`
+    byFill.set(q.fill, (byFill.get(q.fill) ?? '') + sq)
+  }
   return (
     <svg
       className={className}
@@ -200,15 +205,10 @@ export function MosaicCover({
       preserveAspectRatio="xMidYMid slice"
     >
       <rect width={cols * size} height={rows * size} fill={PAPER_DEEP} />
-      {rects.map((q) => (
-        <rect
-          key={`${q.x}-${q.y}`}
-          x={q.x * size + 1}
-          y={q.y * size + 1}
-          width={size - 2}
-          height={size - 2}
-          fill={q.fill}
-        />
+      {/* One path per colour instead of one <rect> per square: about 7 nodes per cover instead of 100+,
+          which matters on low-end phones rendering a page of listings. */}
+      {[...byFill.entries()].map(([fill, d]) => (
+        <path key={fill} d={d} fill={fill} />
       ))}
       <rect
         x={accent.c * size + 1}
