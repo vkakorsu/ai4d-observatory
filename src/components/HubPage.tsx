@@ -276,6 +276,26 @@ export async function HubPage({ kind, slug }: { kind: HubKind; slug: string }) {
               )}
             </div>
           )}
+          {mapRows && (
+            // Full-size links to every country: easy country-to-country comparison, and the equivalent of the
+            // map's small targets (Singapore, Maldives) that WCAG 2.2 target size (2.5.8) requires.
+            <nav className="country-strip" aria-label="Compare with other countries">
+              <span className="label">Compare</span>
+              {[...mapRows]
+                .sort((a, b) => a.country.localeCompare(b.country))
+                .map((r) =>
+                  r.slug === slug ? (
+                    <span key={r.slug} className="chip chip--country" aria-current="page">
+                      {r.country}
+                    </span>
+                  ) : (
+                    <Link key={r.slug} href={`/countries/${r.slug}`} className="chip chip--country">
+                      {r.country}
+                    </Link>
+                  ),
+                )}
+            </nav>
+          )}
         </Section>
       )}
 

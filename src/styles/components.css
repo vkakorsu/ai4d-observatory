@@ -608,6 +608,11 @@ a.stat:hover .stat__l {
   color: var(--ink-56);
   margin-right: var(--s-2);
 }
+.country-strip [aria-current='page'] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+}
 .country-strip .chip {
   font-size: var(--step-0);
   padding: 0.2rem 0.6rem;

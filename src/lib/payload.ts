@@ -4,7 +4,12 @@ import { getPayload, type Payload } from 'payload'
 /** Single Payload instance per process. Server components query the database directly, no HTTP hop. */
 export const getPayloadClient = async (): Promise<Payload> => getPayload({ config: configPromise })
 
-type Doc = { id: string | number; slug?: string | null; name?: string | null; title?: string | null }
+type Doc = {
+  id: string | number
+  slug?: string | null
+  name?: string | null
+  title?: string | null
+}
 
 /** Resolve taxonomy slugs to ids for relationship filters. */
 export const resolveTaxonomyIds = async (
@@ -24,12 +29,31 @@ export const resolveTaxonomyIds = async (
 }
 
 /** Fetch all terms of a taxonomy for filter controls. */
-export const taxonomyOptions = async (
-  payload: Payload,
-  collection: 'countries' | 'topics' | 'enablers' | 'rai-dimensions' | 'stakeholder-types' | 'tags',
-) => {
-  const res = await payload.find({ collection, limit: 500, sort: 'name', depth: 0, pagination: false })
-  return res.docs.map((d) => ({ value: (d as Doc).slug ?? '', label: (d as Doc).name ?? '' }))
+type TaxonomySlug =
+  'countries' | 'topics' | 'enablers' | 'rai-dimensions' | 'stakeholder-types' | 'tags'
+
+/**
+ * Filter options change rarely but were read on every listing request, four or five queries each. Cached in
+ * memory for a minute per server instance, so a new term an editor adds appears in the filters within a minute.
+ */
+const OPTIONS_TTL_MS = 60_000
+const optionsCache = new Map<
+  TaxonomySlug,
+  { at: number; value: Promise<Array<{ value: string; label: string }>> }
+>()
+
+export const taxonomyOptions = async (payload: Payload, collection: TaxonomySlug) => {
+  const hit = optionsCache.get(collection)
+  if (hit && Date.now() - hit.at < OPTIONS_TTL_MS) return hit.value
+  const value = payload
+    .find({ collection, limit: 500, sort: 'name', depth: 0, pagination: false })
+    .then((res) =>
+      res.docs.map((d) => ({ value: (d as Doc).slug ?? '', label: (d as Doc).name ?? '' })),
+    )
+  optionsCache.set(collection, { at: Date.now(), value })
+  // A failed query must not be cached.
+  value.catch(() => optionsCache.delete(collection))
+  return value
 }
 
 export const findBySlug = async <T = unknown>(
