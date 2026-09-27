@@ -84,6 +84,11 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
               {(result.docs as Person[]).map((p) => {
                 const org =
                   p.organisation && typeof p.organisation === 'object' ? p.organisation : null
+                // Skip the organisation when the role already names it ("Director, Regional Digital Health Research Centre").
+                const orgLabel =
+                  org && ![org.name, org.acronym].some((n) => n && p.role?.includes(n))
+                    ? `, ${org.acronym ?? org.name}`
+                    : ''
                 return (
                   <Link className="pcard" href={`/people/${p.slug}`} key={p.id}>
                     <Avatar name={p.name} photo={typeof p.photo === 'object' ? p.photo : null} />
@@ -91,7 +96,7 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
                       <span className="pcard__name">{p.name}</span>
                       <span className="pcard__role" style={{ display: 'block' }}>
                         {p.role}
-                        {org ? `, ${org.acronym ?? org.name}` : ''}
+                        {orgLabel}
                       </span>
                       <span className="pcard__meta" style={{ display: 'block' }}>
                         {AFFIL[p.affiliation] ?? p.affiliation}{' '}

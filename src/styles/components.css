@@ -2062,6 +2062,186 @@ a.chip:hover {
   font-weight: 500;
 }
 
+/* ---------- Phones and touch ----------
+   From a device audit of every page type at 320, 360, 375, 390, 414 and 768px. The rules raise text to legible
+   minimums, give touch targets room, and stop layouts growing past a small screen. Desktop layout is unchanged. */
+
+/* A 1fr track grows to its content's minimum width, which pushed the home hero 9px past a 320px screen. */
+@media (max-width: 63.99em) {
+  .hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.search-form input[type='search'] {
+  min-width: 0;
+}
+.search-form .btn {
+  flex: none;
+}
+
+/* Legible minimums. Mixed-case text is at least 12px; all-caps labels at least 11px. */
+.wordmark__text small {
+  font-size: 0.6875rem;
+}
+.chip {
+  font-size: 0.75rem;
+  min-height: 1.5rem;
+  padding: 0.1rem 0.5rem;
+}
+.badge {
+  font-size: 0.6875rem;
+}
+.related-list .item__type {
+  font-size: 0.75rem;
+}
+.funder-mark small {
+  font-size: 0.75rem;
+}
+
+/* iOS Safari zooms the page when a field under 16px takes focus. Phones and touch tablets get 16px fields. */
+@media (max-width: 47.99em), (pointer: coarse) {
+  .filters select,
+  .field select,
+  .field input[type='text'],
+  .field input[type='email'],
+  .field input[type='search'],
+  .field textarea,
+  .subscribe input,
+  input[type='email'],
+  input[type='text'],
+  input[type='search'],
+  select,
+  textarea {
+    font-size: 1rem;
+  }
+}
+
+/* Touch: 44px targets for controls (Apple and Android guidance), 28px for chips in dense rows,
+   comfortably above the 24px WCAG 2.2 AA minimum. */
+@media (pointer: coarse) {
+  .btn,
+  .share-bar__link,
+  .filters summary,
+  .nav-toggle > summary,
+  .filters select,
+  .field select,
+  .field input[type='text'],
+  .field input[type='email'],
+  .field input[type='search'],
+  input[type='email'],
+  input[type='text'] {
+    min-height: 2.75rem;
+  }
+  .btn,
+  .share-bar__link {
+    justify-content: center;
+    min-width: 2.75rem;
+  }
+  .btn--small {
+    padding-inline: 0.9rem;
+  }
+  .share-bar__link {
+    padding-inline: 0.8rem;
+  }
+  .chip {
+    min-height: 1.75rem;
+    padding-inline: 0.6rem;
+  }
+  .chip-row {
+    gap: 0.4rem;
+  }
+  .section__more {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    min-width: 2.75rem;
+  }
+  .site-footer li + li {
+    margin-top: 0;
+  }
+  .site-footer li a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.5rem;
+  }
+}
+
+@media (max-width: 39.99em) {
+  /* Home calls to action: the primary action spans the row, the two secondary ones share the next. */
+  .hero__actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .hero__actions > :first-child {
+    grid-column: 1 / -1;
+  }
+  .hero__actions .btn {
+    padding-inline: 0.75rem;
+  }
+  .hero__actions .btn--ghost {
+    background: var(--surface);
+    border-color: var(--ink);
+  }
+
+  /* Wide covers fill the column instead of stopping part way across it. */
+  .item--cover-wide .thumb--wide {
+    max-height: none;
+    width: 100%;
+    aspect-ratio: 21 / 9;
+  }
+
+  /* Country codes are unreadable at phone scale; the legend, summary and table carry the same information. */
+  .map-figure text,
+  .map-figure .label-halo {
+    display: none;
+  }
+
+  /* The menu opens as a sheet the width of the page. */
+  .nav-toggle__panel {
+    width: calc(100vw - 2 * var(--gutter));
+    box-shadow: 0 16px 40px rgba(26, 31, 28, 0.14);
+  }
+
+  /* Footer: link groups side by side, partner marks on an even grid. */
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--s-6) var(--s-4);
+  }
+  .footer-brand {
+    grid-column: 1 / -1;
+  }
+  .footer-funders {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+    gap: var(--s-3);
+  }
+  .footer-funders {
+    align-items: stretch;
+  }
+  .funder-mark {
+    min-width: 0;
+  }
+}
+/* 320px screens: the three calls to action stack, the header drops its tagline (the footer keeps it),
+   and the search field gives up its icon so the placeholder fits. */
+@media (max-width: 22.49em) {
+  .hero__actions {
+    grid-template-columns: 1fr;
+  }
+  .site-header .wordmark__text small {
+    display: none;
+  }
+  .hero-search {
+    padding-left: var(--s-3);
+  }
+  .hero-search > svg {
+    display: none;
+  }
+  .hero-search .btn {
+    padding-inline: 0.85rem;
+  }
+}
+
 /* Print */
 @media print {
   .site-header,

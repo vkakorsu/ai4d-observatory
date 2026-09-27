@@ -105,7 +105,7 @@ export default async function HomePage() {
                 id="hero-q"
                 type="search"
                 name="q"
-                placeholder="Search use cases, studies, data and people"
+                placeholder="Search the Observatory"
                 autoComplete="off"
               />
               <button className="btn btn--ink" type="submit">
