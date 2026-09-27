@@ -120,7 +120,7 @@ ai4d-prototype/
   docs/THIRD_PARTY_REGISTER.md  licences, services, costs and lock-in (Sections 3.1.5 e, 3.1.8 b)
   LICENSE                    MIT
   vercel.json                daily jobs cron on Vercel (retention, scheduled publishing)
-  .github/workflows/ci.yml   typecheck and tests on every push
+  .github/workflows/ci.yml   typecheck, lint, tests and dependency audit on every push
   scripts/a11y.mjs           axe-core sweep over every page type
   Dockerfile                 multi-stage production image
   docker-compose.yml         app, PostgreSQL, Caddy (TLS), optional Umami, seed and export tools
@@ -148,11 +148,11 @@ ai4d-prototype/
 
 ## 7. Technology
 
-Next.js 16.3 (App Router, server components, server actions for public forms; 16.3.6 carries the May, August and September 2026 security fixes), Payload CMS 3 (embedded, Lexical rich text, search plugin, import/export plugin, versions, drafts and trash), TypeScript, SQLite via libSQL for development and the evaluation prototype, PostgreSQL adapter for production, d3-geo and Natural Earth boundaries (`world-atlas`) for server-rendered SVG maps, sharp for WebP renditions generated at upload, Satori (`next/og`) for per-item share cards, Vitest for tests. No client-side data fetching on content pages. Licence: MIT.
+Next.js 16.3 (App Router, server components, server actions for public forms; 16.3.6 carries the May, August and September 2026 security fixes), Payload CMS 3 (embedded, Lexical rich text, search plugin, import/export plugin, versions, drafts and trash), TypeScript, SQLite via libSQL for local development, PostgreSQL for the evaluation host and production, d3-geo and Natural Earth boundaries (`world-atlas`) for server-rendered SVG maps, sharp for WebP renditions generated at upload, Satori (`next/og`) for per-item share cards, Vitest for tests. No client-side data fetching on content pages. Licence: MIT.
 
 ## 8. Tests
 
-`pnpm test` runs nine files, 115 tests:
+`pnpm test` runs nine files, 118 tests:
 
 - Filter query builder from URL parameters, including the unknown-slug case that must return nothing rather than everything.
 - Search index text assembly and the `beforeSync` enrichment, with a fake Payload.

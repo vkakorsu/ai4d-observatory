@@ -57,7 +57,7 @@ Checks that should pass before any deployment:
 
 ```bash
 pnpm typecheck
-pnpm test          # 97 unit and integration tests
+pnpm test          # 118 unit and integration tests
 pnpm a11y          # axe-core over every page type against the running server, exits non-zero on any violation
 ```
 
@@ -85,11 +85,11 @@ gh repo create <org>/ai4d-observatory --public --source . --push
 
 Before pushing, confirm nothing sensitive is staged: `git status --ignored` should list `.env`, `data/`, `media/`. Grep the tree for the demo passwords if they were changed in `.env.example`.
 
-The MIT licence text is in `LICENSE` and declared in `package.json`. Continuous integration is in `.github/workflows/ci.yml` (typecheck and tests on every push). `vercel.json` schedules the jobs runner once a day at 03:00 UTC for Vercel hosts.
+The MIT licence text is in `LICENSE` and declared in `package.json`. Continuous integration is in `.github/workflows/ci.yml` (typecheck, lint, tests and a dependency audit that fails on high or critical advisories, on every push). `vercel.json` schedules the jobs runner once a day at 03:00 UTC for Vercel hosts.
 
 ## 4. Production on the Client's server with Docker Compose
 
-Requirements: a Linux host with Docker Engine 24+ and the Compose plugin, ports 80 and 443 reachable, a DNS A/AAAA record for the site domain pointing at the host. 2 vCPU, 4 GB RAM and 20 GB disk are ample for this workload.
+Requirements: a Linux host with Docker Engine 24+ and the Compose plugin, ports 80 and 443 reachable, a DNS A/AAAA record for the site domain pointing at the host. Minimum: 2 vCPU, 4 GB RAM and 60 GB SSD for production (1 vCPU, 2 GB RAM, 30 GB for staging), as in Section 6.3 of the Technical Proposal.
 
 `docker-compose.yml` runs:
 

@@ -320,8 +320,8 @@ export default async function PrototypeNotesPage() {
               At <code>/admin</code>. Administrator, Editor and Contributor roles. Unpublish reverts
               an item to draft; archive moves it to a restorable Trash with its history intact.
               Every list view has an Export button (CSV or JSON, chosen columns), including the
-              download, subscriber and registration records. Evaluators can request editor access
-              from the bidder.
+              download, subscriber and registration records. An editor login for evaluators is
+              given in the bidder’s covering email.
             </span>
           </li>
           <li>

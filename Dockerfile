@@ -14,7 +14,7 @@
 FROM node:22-alpine AS base
 ENV PNPM_HOME=/pnpm
 ENV PATH=$PNPM_HOME:$PATH
-RUN apk add --no-cache libc6-compat && npm install -g pnpm@10
+RUN apk add --no-cache libc6-compat && npm install -g pnpm@10.34.5
 
 # ---------------------------------------------------------------------------
 FROM base AS deps
