@@ -134,3 +134,86 @@ html[data-theme='dark'] .ai4d-welcome__links li {
 .localizer {
   display: none;
 }
+
+/* Editor guide page (/admin/editor-guide) */
+.ai4d-guide {
+  max-width: 50rem;
+  padding: 24px 0 64px;
+}
+.ai4d-guide h1 {
+  margin: 4px 0 8px;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 40px;
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+}
+.ai4d-guide__lede {
+  margin: 0 0 28px;
+  font-size: 15px;
+  color: var(--theme-elevation-600);
+}
+.ai4d-guide__body {
+  font-size: 15px;
+  line-height: 1.6;
+}
+.ai4d-guide__body h2 {
+  margin: 36px 0 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--theme-elevation-150);
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 26px;
+  line-height: 1.2;
+}
+.ai4d-guide__body h3 {
+  margin: 24px 0 8px;
+  font-size: 17px;
+}
+.ai4d-guide__body p,
+.ai4d-guide__body ul,
+.ai4d-guide__body ol {
+  margin: 0 0 12px;
+}
+.ai4d-guide__body li {
+  margin-bottom: 4px;
+}
+.ai4d-guide__body code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  padding: 1px 5px;
+  background: var(--theme-elevation-50);
+  border-radius: 2px;
+}
+.ai4d-guide__body table {
+  width: 100%;
+  margin: 8px 0 18px;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.ai4d-guide__body th,
+.ai4d-guide__body td {
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--theme-elevation-150);
+}
+.ai4d-guide__body th {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: var(--theme-elevation-50);
+  border-bottom-color: var(--theme-elevation-400);
+}
+.ai4d-guide__body a {
+  color: var(--theme-text);
+  text-decoration-color: var(--ai4d-accent);
+  text-underline-offset: 3px;
+}
+.ai4d-nav-guide {
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--theme-elevation-150);
+}

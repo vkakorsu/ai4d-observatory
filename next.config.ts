@@ -62,6 +62,10 @@ const nextConfig: NextConfig = {
     },
   ],
   serverExternalPackages: ['libsql', '@libsql/client', '@payloadcms/db-sqlite'],
+  // The CMS editor guide page reads this file at request time (src/components/admin/EditorGuide.tsx).
+  outputFileTracingIncludes: {
+    '/admin/[[...segments]]': ['./docs/EDITOR_GUIDE.md'],
+  },
   turbopack: {
     root: path.resolve(dirname),
   },

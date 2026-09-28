@@ -46,7 +46,7 @@ const LINKS = [
     note: 'Visits, pages, downloads and sign-ups. Read-only.',
   },
   {
-    href: 'https://github.com/vkakorsu/ai4d-observatory/blob/main/docs/EDITOR_GUIDE.md',
+    href: '/admin/editor-guide',
     label: 'Editor guide',
     note: 'How to publish, tag, archive and export.',
   },
@@ -71,7 +71,11 @@ export function BeforeDashboard() {
       <ul className="ai4d-welcome__links">
         {LINKS.map((l) => (
           <li key={l.href}>
-            <a href={l.href.startsWith('/') ? `${SITE}${l.href}` : l.href} target="_blank" rel="noopener noreferrer">
+            {/* The guide opens inside the CMS; the other links open in a new tab. */}
+            <a
+              href={l.href.startsWith('/') ? `${SITE}${l.href}` : l.href}
+              {...(l.href.startsWith('/admin') ? {} : { target: '_blank', rel: 'noopener noreferrer' })}
+            >
               {l.label}
             </a>
             <span>{l.note}</span>

@@ -126,6 +126,11 @@ export default buildConfig({
         Icon: '/components/admin/Brand#NavIcon',
       },
       beforeDashboard: ['/components/admin/Brand#BeforeDashboard'],
+      afterNavLinks: ['/components/admin/EditorGuide#EditorGuideNavLink'],
+      // The editor guide as a CMS page for signed-in users (Section 3.1.10 f).
+      views: {
+        editorGuide: { Component: '/components/admin/EditorGuide#EditorGuideView', path: '/editor-guide' },
+      },
     },
     dateFormat: 'd MMMM yyyy HH:mm',
   },
