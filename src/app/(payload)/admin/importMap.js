@@ -38,6 +38,9 @@ import { ExportPreview as ExportPreview_cdf7e044479f899a31f804427d568b36 } from 
 import { ExportSaveButton as ExportSaveButton_cdf7e044479f899a31f804427d568b36 } from '@payloadcms/plugin-import-export/rsc'
 import { ImportPreview as ImportPreview_cdf7e044479f899a31f804427d568b36 } from '@payloadcms/plugin-import-export/rsc'
 import { ImportSaveButton as ImportSaveButton_cdf7e044479f899a31f804427d568b36 } from '@payloadcms/plugin-import-export/rsc'
+import { NavIcon as NavIcon_81fda60f3e3709e861f40982a767707d } from '../../../components/admin/Brand'
+import { Logo as Logo_81fda60f3e3709e861f40982a767707d } from '../../../components/admin/Brand'
+import { BeforeDashboard as BeforeDashboard_81fda60f3e3709e861f40982a767707d } from '../../../components/admin/Brand'
 import { ImportExportProvider as ImportExportProvider_cdf7e044479f899a31f804427d568b36 } from '@payloadcms/plugin-import-export/rsc'
 import { VercelBlobClientUploadHandler as VercelBlobClientUploadHandler_16c82c5e25f430251a3e3ba57219ff4e } from '@payloadcms/storage-vercel-blob/client'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
@@ -84,6 +87,9 @@ export const importMap = {
   "@payloadcms/plugin-import-export/rsc#ExportSaveButton": ExportSaveButton_cdf7e044479f899a31f804427d568b36,
   "@payloadcms/plugin-import-export/rsc#ImportPreview": ImportPreview_cdf7e044479f899a31f804427d568b36,
   "@payloadcms/plugin-import-export/rsc#ImportSaveButton": ImportSaveButton_cdf7e044479f899a31f804427d568b36,
+  "/components/admin/Brand#NavIcon": NavIcon_81fda60f3e3709e861f40982a767707d,
+  "/components/admin/Brand#Logo": Logo_81fda60f3e3709e861f40982a767707d,
+  "/components/admin/Brand#BeforeDashboard": BeforeDashboard_81fda60f3e3709e861f40982a767707d,
   "@payloadcms/plugin-import-export/rsc#ImportExportProvider": ImportExportProvider_cdf7e044479f899a31f804427d568b36,
   "@payloadcms/storage-vercel-blob/client#VercelBlobClientUploadHandler": VercelBlobClientUploadHandler_16c82c5e25f430251a3e3ba57219ff4e,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1

@@ -117,6 +117,15 @@ export default buildConfig({
     importMap: { baseDir: path.resolve(dirname) },
     meta: {
       titleSuffix: ' | Asia AI4D Observatory CMS',
+      icons: [{ rel: 'icon', type: 'image/svg+xml', url: '/icon.svg' }],
+    },
+    // The Observatory's mark and a welcome panel, so editors land in a branded workspace (Section 3.1.1 d).
+    components: {
+      graphics: {
+        Logo: '/components/admin/Brand#Logo',
+        Icon: '/components/admin/Brand#NavIcon',
+      },
+      beforeDashboard: ['/components/admin/Brand#BeforeDashboard'],
     },
     dateFormat: 'd MMMM yyyy HH:mm',
   },

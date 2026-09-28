@@ -1,0 +1,129 @@
+/* Admin branding. Payload's own styles sit in the payload-default layer, so these unlayered rules win.
+   Colours and type follow the public site (src/styles/tokens.css). */
+
+:root {
+  --font-body: 'IBM Plex Sans Variable', 'Segoe UI', system-ui, sans-serif;
+  --font-serif: 'Newsreader Variable', Georgia, serif;
+  --font-mono: 'IBM Plex Mono', Consolas, monospace;
+  --ai4d-ink: #1a1f1c;
+  --ai4d-paper: #f7f5f0;
+  --ai4d-accent: #c8371f;
+  --ai4d-moss: #3f6b4f;
+}
+
+html[data-theme='light'] {
+  --theme-bg: var(--ai4d-paper);
+}
+
+/* Headings in the display face, as on the site. */
+.dashboard h2,
+.dashboard__label,
+.collection-list h1,
+.doc-header__title,
+.render-title,
+.list-header h1 {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* Sign-in logo */
+.ai4d-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--theme-text);
+}
+.ai4d-logo__text {
+  font-family: var(--font-serif);
+  font-size: 28px;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+}
+.ai4d-logo__text small {
+  display: block;
+  margin-top: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--theme-elevation-500);
+}
+.ai4d-icon {
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
+  color: var(--theme-text);
+}
+.ai4d-icon svg {
+  display: block;
+  overflow: visible;
+}
+
+/* Dashboard welcome panel */
+.ai4d-welcome {
+  margin: 0 0 32px;
+  padding: 24px 28px 26px;
+  background: var(--theme-elevation-0);
+  border: 1px solid var(--theme-elevation-150);
+  border-top: 3px solid var(--ai4d-accent);
+}
+.ai4d-welcome__head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--theme-text);
+}
+.ai4d-welcome__kicker {
+  margin: 0 0 2px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ai4d-accent);
+}
+.ai4d-welcome h2 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 28px;
+  line-height: 1.1;
+}
+.ai4d-welcome__lede {
+  max-width: 62rem;
+  margin: 14px 0 18px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--theme-elevation-700);
+}
+.ai4d-welcome__links {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ai4d-welcome__links li {
+  padding: 12px 14px;
+  border: 1px solid var(--theme-elevation-150);
+  background: var(--ai4d-paper);
+}
+html[data-theme='dark'] .ai4d-welcome__links li {
+  background: var(--theme-elevation-50);
+}
+.ai4d-welcome__links a {
+  display: block;
+  font-weight: 600;
+  color: var(--theme-text);
+  text-decoration: underline;
+  text-decoration-color: var(--ai4d-accent);
+  text-underline-offset: 3px;
+}
+.ai4d-welcome__links span {
+  display: block;
+  margin-top: 4px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--theme-elevation-600);
+}

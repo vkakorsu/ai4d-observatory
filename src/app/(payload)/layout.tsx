@@ -7,6 +7,9 @@ import { handleServerFunctions, RootLayout } from '@payloadcms/next/layouts'
 import React from 'react'
 
 import { importMap } from './admin/importMap.js'
+import '@fontsource-variable/newsreader/wght.css'
+import '@fontsource-variable/ibm-plex-sans/index.css'
+import '@fontsource/ibm-plex-mono/400.css'
 import './custom.css'
 
 export const dynamic = 'force-dynamic'
