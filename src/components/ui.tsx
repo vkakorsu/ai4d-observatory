@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { Icon } from './Icon'
 import { absoluteUrl } from '@/lib/format'
 import { jsonLd } from '@/lib/seo'
+import { Flag } from './Flag'
 
 /* Small server components shared across pages. */
 
@@ -38,18 +39,24 @@ export function PageHeader({
   lede,
   aside,
   split = false,
+  flag,
 }: {
   kicker?: string
   title: string
   lede?: ReactNode
   aside?: ReactNode
   split?: boolean
+  /** A country hub shows the national flag beside its name. */
+  flag?: ReactNode
 }) {
   return (
     <header className={`page-header ${split ? 'page-header--split' : ''}`}>
       <div>
         {kicker && <p className="kicker">{kicker}</p>}
-        <h1>{title}</h1>
+        <h1 className={flag ? 'has-flag' : undefined}>
+          {flag}
+          {title}
+        </h1>
         {lede && <p className="lede">{lede}</p>}
       </div>
       {aside && <div>{aside}</div>}
@@ -138,7 +145,7 @@ export function JsonLd({ data }: { data: unknown }) {
   return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: json }} />
 }
 
-type Term = { id: string | number; name: string; slug?: string | null }
+type Term = { id: string | number; name: string; slug?: string | null; iso3?: string | null }
 
 const termList = (v: unknown): Term[] =>
   Array.isArray(v)
@@ -160,12 +167,13 @@ export function TaxChips({
   const enablers = termList(doc.enablers)
   const topics = termList(doc.topics ?? doc.expertise)
   const dims = termList(doc.raiDimensions)
-  const chips: Array<{ key: string; label: string; href: string; cls: string }> = [
+  const chips: Array<{ key: string; label: string; href: string; cls: string; iso3?: string | null }> = [
     ...countries.map((t) => ({
       key: `c-${t.id}`,
       label: t.name,
       href: base ? `${base}?country=${t.slug}` : `/countries/${t.slug}`,
       cls: 'chip chip--country',
+      iso3: t.iso3,
     })),
     ...enablers.map((t) => ({
       key: `e-${t.id}`,
@@ -193,6 +201,7 @@ export function TaxChips({
     <div className="chip-row">
       {shown.map((c) => (
         <Link key={c.key} href={c.href} className={c.cls}>
+          {c.iso3 && <Flag iso3={c.iso3} />}
           {c.label}
         </Link>
       ))}

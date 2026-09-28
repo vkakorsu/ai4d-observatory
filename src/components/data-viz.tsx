@@ -2,6 +2,7 @@ import Link from '@/components/SmartLink'
 import { MapTooltip } from './MapTooltip'
 import { buildRegionMap } from '@/lib/geo'
 import { formatValue, makeScale, summarise, summariseStatus, type ValueRow } from '@/lib/stats'
+import { Flag } from './Flag'
 
 /*
  * Accessible data views (Section 3.1.4 e). Each visualisation is server-rendered SVG with
@@ -255,7 +256,10 @@ export function DataTable({
               <tr key={r.iso3}>
                 <td className="num">{r.value === null ? '' : i + 1}</td>
                 <th scope="row">
-                  <Link href={`${linkBase}/${r.slug}`}>{r.country}</Link>
+                  <Link href={`${linkBase}/${r.slug}`} className="with-flag">
+                    <Flag iso3={r.iso3} />
+                    {r.country}
+                  </Link>
                 </th>
                 <td>{r.subregion === 'south-asia' ? 'South Asia' : 'Southeast Asia'}</td>
                 <td className="num">{display(indicator, r.value)}</td>

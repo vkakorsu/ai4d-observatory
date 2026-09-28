@@ -5,6 +5,7 @@ import { RegionMap, type MapRow } from '@/components/data-viz'
 import { Icon } from '@/components/Icon'
 import { getPayloadClient } from '@/lib/payload'
 import { getSettings, indicatorRows } from '@/lib/site'
+import { Flag } from '@/components/Flag'
 
 export const revalidate = 60
 
@@ -135,7 +136,7 @@ export default async function DataPage({
         <div className="hub-counts">
           {countries.docs.map((c) => (
             <Link key={c.id} href={`/countries/${c.slug}`}>
-              <span className="mono tiny muted">{c.iso3}</span> {c.name}
+              <Flag iso3={c.iso3} size="md" /> {c.name}
             </Link>
           ))}
         </div>

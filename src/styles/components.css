@@ -2066,6 +2066,52 @@ a.chip:hover {
   font-weight: 500;
 }
 
+/* ---------- Flags ----------
+   Real national flags (flag-icons, self-hosted). A hairline keeps white or pale flags from dissolving
+   into the paper; the radius is small so the flag still reads as a flag rather than an icon. */
+.flag {
+  display: inline-block;
+  flex: none;
+  aspect-ratio: 4 / 3;
+  height: auto;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(26, 31, 28, 0.14);
+  object-fit: cover;
+  vertical-align: -0.12em;
+}
+.flag--sm {
+  width: 1.05em;
+}
+.flag--md {
+  width: 1.4em;
+  vertical-align: -0.2em;
+}
+.flag--lg {
+  width: 0.78em;
+  border-radius: 3px;
+  box-shadow:
+    0 0 0 1px rgba(26, 31, 28, 0.12),
+    0 2px 6px rgba(26, 31, 28, 0.12);
+  vertical-align: 0.06em;
+}
+h1.has-flag {
+  display: flex;
+  align-items: center;
+  gap: 0.28em;
+  flex-wrap: wrap;
+}
+.chip--country {
+  gap: 0.4em;
+}
+.with-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+}
+.hub-counts .flag--md {
+  margin-right: 0.3em;
+}
+
 /* ---------- Phones and touch ----------
    From a device audit of every page type at 320, 360, 375, 390, 414 and 768px. The rules raise text to legible
    minimums, give touch targets room, and stop layouts growing past a small screen. Desktop layout is unchanged. */

@@ -11,6 +11,7 @@ import { countPublished, getHome, getSettings, indicatorRows, latest } from '@/l
 import { CONTENT_TYPES, pathFor, type ContentTypeKey } from '@/lib/content-types'
 import { formatDate, formatDateRange } from '@/lib/format'
 import type { Event, Indicator } from '@/payload-types'
+import { Flag } from '@/components/Flag'
 
 export const revalidate = 60
 
@@ -294,6 +295,7 @@ export default async function HomePage() {
               <span className="label">Countries</span>
               {countries.map((c) => (
                 <Link key={c.id} href={`/countries/${c.slug}`} className="chip chip--country">
+                  <Flag iso3={c.iso3} />
                   {c.name}
                 </Link>
               ))}

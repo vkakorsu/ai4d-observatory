@@ -14,6 +14,7 @@ Required by Sections 3.1.5 (e), 3.1.8 (b) and 3.2 ("third-party service/licence 
 | libSQL / SQLite | via `@payloadcms/db-sqlite` | MIT / public domain | Development and evaluation database | None | Open source |
 | d3-geo, topojson-client | 3.1 / 3.1 | ISC | Server-rendered SVG maps | None | Open source |
 | world-atlas (Natural Earth boundaries) | 2.0.2 | ISC (code), public domain (data) | Country boundaries | None | Public domain data |
+| flag-icons (national flags, copied into `public/flags`) | 7.5.0 | MIT (artwork), flags public domain | Country flags beside country names | None | Static SVG files in the repository; no package or service dependency |
 | sharp | 0.35 | Apache 2.0 | WebP renditions generated at upload (AVIF off pending the libheif advisory GHSA-2xp9-vwfh-vxw4) | None | Open source |
 | @vercel/blob | 2.3 | Apache 2.0 | Reads gated files from Blob storage on the evaluation host only | None | Used only when `MEDIA_STORAGE=vercel-blob`; production uses local disk or S3 |
 | Newsreader, IBM Plex Sans, IBM Plex Mono (via `@fontsource`) | 5.3 | SIL Open Font Licence 1.1 | Typography, self-hosted | None | Open source, no external requests |

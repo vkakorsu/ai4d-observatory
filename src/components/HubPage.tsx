@@ -11,6 +11,7 @@ import { countPublished, findTerm, getSettings, indicatorRows, latest } from '@/
 import { buildMetadata } from '@/lib/seo'
 import { CONTENT_TYPES, type ContentTypeKey } from '@/lib/content-types'
 import type { Country, Event, Indicator } from '@/payload-types'
+import { Flag } from './Flag'
 
 /**
  * Hub pages for countries, topics (sectors), enablers and responsible AI dimensions.
@@ -200,6 +201,7 @@ export async function HubPage({ kind, slug }: { kind: HubKind; slug: string }) {
       <PageHeader
         kicker={meta.kicker}
         title={term.name}
+        flag={kind === 'countries' ? <Flag iso3={(term as { iso3?: string }).iso3} size="lg" /> : undefined}
         lede={term.description ?? undefined}
         split
         aside={
@@ -286,10 +288,12 @@ export async function HubPage({ kind, slug }: { kind: HubKind; slug: string }) {
                 .map((r) =>
                   r.slug === slug ? (
                     <span key={r.slug} className="chip chip--country" aria-current="page">
+                      <Flag iso3={r.iso3} />
                       {r.country}
                     </span>
                   ) : (
                     <Link key={r.slug} href={`/countries/${r.slug}`} className="chip chip--country">
+                      <Flag iso3={r.iso3} />
                       {r.country}
                     </Link>
                   ),

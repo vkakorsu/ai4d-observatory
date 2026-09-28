@@ -16,6 +16,8 @@ const dirname = path.dirname(__filename)
  */
 const analyticsOrigins = [
   process.env.NEXT_PUBLIC_UMAMI_SCRIPT_URL ? new URL(process.env.NEXT_PUBLIC_UMAMI_SCRIPT_URL).origin : '',
+  // Umami Cloud serves its script from cloud.umami.is but sends events to gateway.umami.is.
+  process.env.NEXT_PUBLIC_UMAMI_SCRIPT_URL?.includes('cloud.umami.is') ? 'https://gateway.umami.is' : '',
   process.env.NEXT_PUBLIC_GA4_ID ? 'https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com' : '',
 ]
   .filter(Boolean)

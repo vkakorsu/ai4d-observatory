@@ -191,7 +191,9 @@ export default async function PrototypeNotesPage() {
                       <PendingBadge>Pending client property</PendingBadge>
                     </>
                   ) : (
-                    `${analytics} (connected)`
+                    analytics === 'umami'
+                      ? 'Umami, cookieless, connected. Production runs it self-hosted on the Client’s server.'
+                      : `${analytics.toUpperCase()} (connected)`
                   )}
                 </td>
                 <td>
