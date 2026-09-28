@@ -255,8 +255,12 @@
   color: var(--accent);
   margin: 0 0 var(--s-3);
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--s-3);
+  gap: var(--s-2) var(--s-3);
+  /* Each part stays on one line; on a phone the date and badge move to the next row instead of
+     squeezing "Use case" into a narrow column. */
+  white-space: nowrap;
 }
 .kicker::before {
   content: '';
