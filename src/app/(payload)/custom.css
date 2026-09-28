@@ -127,3 +127,10 @@ html[data-theme='dark'] .ai4d-welcome__links li {
   line-height: 1.45;
   color: var(--theme-elevation-600);
 }
+
+/* English is the only active locale, so the locale switcher offers no choice; hiding it also avoids a
+   Payload first-render glitch that labels it "undefined" straight after login. Remove this rule when a
+   second locale is added to localization.locales in payload.config.ts. */
+.localizer {
+  display: none;
+}
