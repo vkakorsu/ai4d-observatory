@@ -1,6 +1,7 @@
 /* Payload-generated admin route. `connection()` forces a request-time render so
- * the session cookie is read. Next.js 16 still ships a blank unauthenticated
- * admin shell (payloadcms/payload#17545); /sign-in is the working login. */
+ * the session cookie is read, which also keeps the login view rendering on
+ * Next.js 16 (payloadcms/payload#17545). Signed-out visitors get Payload's own
+ * branded login at /admin/login. */
 import type { Metadata } from 'next'
 import { connection } from 'next/server'
 

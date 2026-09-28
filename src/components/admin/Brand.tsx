@@ -1,6 +1,6 @@
 /**
- * Branding for the Payload admin: the logo on Payload's own screens, the navigation icon and a welcome
- * panel on the dashboard. Editors sign in on the site's /sign-in page (see src/proxy.ts). Registered in payload.config.ts under admin.components.
+ * Branding for the Payload admin: the logo on the login and first-user screens, the navigation icon and a
+ * welcome panel on the dashboard. Registered in payload.config.ts under admin.components.
  * The mark matches the public site's wordmark (src/components/Wordmark.tsx).
  */
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? ''

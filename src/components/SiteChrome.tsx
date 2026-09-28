@@ -138,7 +138,7 @@ export function SiteFooter({ settings }: { settings: SiteSetting }) {
             © {new Date().getFullYear()} LIRNEasia. Content licensed CC BY 4.0 unless stated.
           </span>
           <Link href="/prototype-notes">Prototype notes</Link>
-          <Link href="/sign-in">Editor login</Link>
+          <Link href="/admin">Editor login</Link>
         </div>
       </div>
     </footer>
