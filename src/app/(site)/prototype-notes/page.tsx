@@ -71,6 +71,13 @@ const TOUR = [
       'Site-wide and per-type feeds, XML sitemap, Open Graph share cards and schema.org data on every page.',
     ref: '3.1.6 e',
   },
+  {
+    href: 'https://cloud.umami.is/share/RBNwaybQVSQmFY7n',
+    label: 'See the live analytics',
+    proves:
+      'Read-only dashboard for this site: visits, pages, referrers, countries, devices, and download, sign-up and registration events. No login needed.',
+    ref: '3.1.6 d',
+  },
 ]
 
 export const metadata: Metadata = {
@@ -191,9 +198,15 @@ export default async function PrototypeNotesPage() {
                       <PendingBadge>Pending client property</PendingBadge>
                     </>
                   ) : (
-                    analytics === 'umami'
-                      ? 'Umami, cookieless, connected. Production runs it self-hosted on the Client’s server.'
-                      : `${analytics.toUpperCase()} (connected)`
+                    analytics === 'umami' ? (
+                      <>
+                        Umami, cookieless, connected.{' '}
+                        <a href="https://cloud.umami.is/share/RBNwaybQVSQmFY7n">Open the live dashboard</a>.
+                        Production runs it self-hosted on the Client’s server.
+                      </>
+                    ) : (
+                      `${analytics.toUpperCase()} (connected)`
+                    )
                   )}
                 </td>
                 <td>
